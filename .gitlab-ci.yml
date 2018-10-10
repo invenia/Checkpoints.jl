@@ -1,0 +1,40 @@
+.test_template: &test_definition
+  # Uncomment below if you would like to run the tests on specific references
+  # only, such as the branches `master`, `develop`, etc.
+  # only:
+  #   - master
+  #   - develop
+  script:
+    # Substitute `coverage = false` below, if you do not want coverage results.
+    - /opt/julia/bin/julia -e 'Pkg.clone(pwd()); Pkg.build("Checkpoints"); Pkg.test("Checkpoints",
+      coverage = true)'
+    # Comment out below if you do not want coverage results.
+    - /opt/julia/bin/julia -e 'Pkg.add("Coverage"); cd(Pkg.dir("Checkpoints"));
+      using Coverage; cl, tl = get_summary(process_folder());
+      println("(", cl/tl*100, "%) covered")'
+
+test:0.5.0:
+  image: julialang/julia:v0.5.0
+  tags:
+    - docker
+  <<: *test_definition
+
+test:0.5.0-dev:
+  image: julialang/julia:v0.5.0-dev
+  tags:
+    - docker
+  <<: *test_definition
+
+test:0.6.0-dev:
+  image: julialang/julia:v0.6.0-dev
+  tags:
+    - docker
+  allow_failure: true
+  <<: *test_definition
+
+test:latest:
+  image: julialang/julia:latest
+  tags:
+    - docker
+  allow_failure: true
+  <<: *test_definition
