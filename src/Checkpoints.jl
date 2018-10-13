@@ -15,14 +15,14 @@ using Mocking
 
 using Compat: @__MODULE__
 
-export JSO
+export JLSO
 
 const CHECKPOINTS = Dict{String, Function}()
 const LOGGER = getlogger(@__MODULE__)
 
 __init__() = Memento.register(LOGGER)
 
-include("JSO.jl")
+include("JLSO.jl")
 
 # function filesave(prefix; ext="jld2")
 #     function f(label, data)
