@@ -2,9 +2,9 @@ module TestModule
 
 using Checkpoints
 using Checkpoints: register, checkpoint
-using Compat: @__MODULE__
 
-const MODULE = @__MODULE__()
+# We aren't using `@__MODULE__` because that would return TestModule on 0.6 and Main.TestModule on 0.7
+const MODULE = "TestModule"
 
 __init__() = register(MODULE, ["foo.x", "foo.y", "bar.a"])
 
