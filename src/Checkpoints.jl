@@ -9,10 +9,11 @@ module Checkpoints
 
 using AWSCore
 using AWSS3
-# using FileIO
 using Memento
 using Mocking
 
+using AWSCore: AWSConfig
+using AWSS3: s3_put
 using Compat: @__MODULE__
 
 export JLSO
@@ -24,76 +25,109 @@ __init__() = Memento.register(LOGGER)
 
 include("JLSO.jl")
 
-# function filesave(prefix; ext="jld2")
-#     function f(label, data)
-#         parts = split(label, '.')
-#         parts[end] = string(parts[end], '.', ext)
-#         path = joinpath(prefix, parts...)
-#         save(path, data)
-#     end
+"""
+    saver(prefix::String; kwargs...) -> Function
+    saver(config::AWSConfig, bucket::String, prefix::String; kwargs...) -> Function
 
-#     return f
-# end
+Generates a function that will dynamically saving variables to organized JLSO files locally
+or on S3. Labels with '.' separators will be used to form subdirectories
+(e.g., "Foo.bar.x" will be saved to "\$prefix/Foo/bar/x.jlso")
+"""
+function saver(prefix::String; kwargs...)
+    function f(label, data)
+        parts = split(label, '.')
+        parts[end] = string(parts[end], ".jlso")
+        parent = joinpath(prefix, parts[1:end-1]...)
 
-# function s3save(config::AWSConfig=AWSCore.aws_config(), bucket, prefix)
-#     verinfo = sprint(versioninfo, true)
-#     image = ""
+        # Make the parent path if doesn't already exist
+        mkpath(parent)
 
-#     # If we're running on AWS batch then store the docker_image
-#     if haskey(ENV, "AWS_BATCH_JOB_ID")
-#         job_id = ENV["AWS_BATCH_JOB_ID"]
-#         response = @mock describe_jobs(Dict("jobs" => [job_id]))
+        # Save the file to disk
+        path = joinpath(parent, parts[end])
+        JLSO.save(path, data; kwargs...)
+    end
 
-#         if length(response["jobs"]) > 0
-#             image = first(response["jobs"])["container"]["image"]
-#         else
-#             warn(LOGGER, "No jobs found with id: $job_id.")
-#         end
-#     end
+    return f
+end
 
-#     function f(label, data)
-#         fileobj = Dict(
-#             "image" => image,
-#             "versioninfo" => sprint(verinfo,
-#             "data" => data,
-#         )
+function saver(config::AWSConfig, bucket::String, prefix::String; kwargs...)
+    function f(label, data)
+        parts = split(label, ".")
+        parts[end] = string(parts[end], ".jlso")
+        key = join(vcat([prefix], parts), "/")
 
-#         parts = split(label, '.')
-#         parts[end] = string(parts[end], '.jso')
-#         key = join(vcat([prefix], parts), "/")
-#         s3_put(config, bucket, key, sprint(serialize, fileobj))
-#     end
+        # Serialize the data to an IOBuffer
+        io = IOBuffer()
+        JLSO.save(io, data; kwargs...)
 
-#     return f
-# end
+        # Upload the serialized object (Vector{UInt8})
+        @mock s3_put(config, bucket, key, take!(io))
+    end
 
-# function s3load(config::AWSConfig=AWSCore.aws_config(), bucket, key)
-#     obj = s3_get(aws, bucket, key)
+    return f
+end
 
-# end
+# TODO: Migrate the `saver` into a Saver/Loader API to allow the same settings to be used
+# for both saving and loading objects.
 
-# function register(labels::String...)
-#     for l in labels
-#         if haskey(CHECKPOINTS, l)
-#             warn(LOGGER, "$l has already registered")
-#         else
-#             CHECKPOINTS[l] = (k, v) -> nothing
-#         end
-#     end
-# end
+"""
+    register([prefix], labels)
 
-# function config(backend::Callable, labels::String...)
-#     for l in labels
-#         if haskey(CHECKPOINTS, l)
-#             CHECKPOINTS[l] = backend
-#         else
-#             warn(LOGGER, "$l is not a registered checkpoint label")
-#         end
-#     end
-# end
+Registers a checkpoint that may be configured at a later time.
+"""
+function register(labels::Vector{String})
+    for l in labels
+        if haskey(CHECKPOINTS, l)
+            warn(LOGGER, "$l has already registered")
+        else
+            CHECKPOINTS[l] = (k, v) -> nothing
+        end
+    end
+end
 
-# checkpoint(label::String, x) = CHECKPOINTS[label](label, x)
+function register(prefix::Union{Module, String}, labels::Vector{String})
+    register(map(l -> join([prefix, l], "."), labels))
+end
 
-# labels() = collect(keys(CHECKPOINTS))
+"""
+    config(backend::Function, labels::Vector{String})
+    config(backend::Function, prefix::String)
+
+Configures the specified checkpoints with the backend saving function.
+The backend function is expected to take the checkpoint label and data to be saved.
+The data is a `Dict` mapping variable names and values.
+"""
+function config(backend::Function, labels::Vector{String})
+    for l in labels
+        haskey(CHECKPOINTS, l) || warn(LOGGER, "$l is not a registered checkpoint label")
+        CHECKPOINTS[l] = backend
+    end
+end
+
+function config(backend::Function, prefix::Union{Module, String})
+    config(backend, filter(l -> startswith(l, prefix), available()))
+end
+
+"""
+    checkpoint([prefix], label, data)
+    checkpoint([prefix], label, data::Pair...)
+    checkpoint([prefix], label, data::Dict)
+
+Defines a data checkpoint with a specified `label` and values `data`.
+By default checkpoints are no-ops and need to be configured with a backend funciton.
+"""
+checkpoint(label::String, data::Dict) = CHECKPOINTS[label](label, data)
+checkpoint(label::String, data::Pair...) = checkpoint(label, Dict(data...))
+checkpoint(label::String, data) = checkpoint(label, Dict("data" => data))
+function checkpoint(prefix::Union{Module, String}, label::String, args...)
+    checkpoint(join([prefix, label], "."), args...)
+end
+
+"""
+    available() -> Vector{String}
+
+Returns a vector of all available (registered) checkpoints.
+"""
+available() = collect(keys(CHECKPOINTS))
 
 end  # module
