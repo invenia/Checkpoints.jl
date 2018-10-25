@@ -88,7 +88,7 @@ all checkpoints with the prefix `"TestPkg.foo"`.
 julia> Checkpoints.config("TestPkg.foo", "./checkpoints")
 ```
 
-To confirm that our checkpoints by assigning our expected `x` and `y values to local
+To confirm that our checkpoints work let's assign our expected `x` and `y values to local
 variables.
 ```julia
 julia> x = rand(5, 5)
