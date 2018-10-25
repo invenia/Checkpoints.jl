@@ -7,8 +7,6 @@ the ability to configure how those checkpoints save data externally
 """
 module Checkpoints
 
-using AWSCore
-using AWSS3
 using AWSTools.S3
 using Memento
 using Mocking
