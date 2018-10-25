@@ -9,78 +9,104 @@ module Checkpoints
 
 using AWSCore
 using AWSS3
+using AWSTools.S3
 using Memento
 using Mocking
+using FilePathsBase
 
-using AWSCore: AWSConfig
-using AWSS3: s3_put
-using Compat: @__MODULE__
+using Compat: @__MODULE__, Nothing, undef
+using DataStructures: DefaultDict
 
-export JLSO
+export JLSO, checkpoint
 
-const CHECKPOINTS = Dict{String, Function}()
 const LOGGER = getlogger(@__MODULE__)
 
 __init__() = Memento.register(LOGGER)
 
 include("JLSO.jl")
+include("handler.jl")
+
+const CHECKPOINTS = Dict{String, Union{Nothing, Handler}}()
+
+include("session.jl")
 
 """
-    saver(prefix::String; kwargs...) -> Function
-    saver(config::AWSConfig, bucket::String, prefix::String; kwargs...) -> Function
+    available() -> Vector{String}
 
-Generates a function that will dynamically saving variables to organized JLSO files locally
-or on S3. Labels with '.' separators will be used to form subdirectories
-(e.g., "Foo.bar.x" will be saved to "\$prefix/Foo/bar/x.jlso")
+Returns a vector of all available (registered) checkpoints.
 """
-function saver(prefix::String; kwargs...)
-    function f(label, data)
-        parts = split(label, '.')
-        parts[end] = string(parts[end], ".jlso")
-        parent = joinpath(prefix, parts[1:end-1]...)
+available() = collect(keys(CHECKPOINTS))
 
-        # Make the parent path if doesn't already exist
-        mkpath(parent)
+"""
+    checkpoint([prefix], name, data)
+    checkpoint([prefix], name, data::Pair...; tags...)
+    checkpoint([prefix], name, data::Dict; tags...)
 
-        # Save the file to disk
-        path = joinpath(parent, parts[end])
-        JLSO.save(path, data; kwargs...)
-    end
+Defines a data checkpoint with a specified `label` and values `data`.
+By default checkpoints are no-ops and need to be explicitly configured.
 
-    return f
+    checkpoint(session, data; tags...)
+    checkpoint(handler, name, data::Dict; tags...)
+
+Alternatively, you can also checkpoint with to a session which stages the data to be
+commited later by `commit!(session)`.
+Explicitly calling checkpoint on a handler is generally not advised, but is an option.
+"""
+function checkpoint(name::String, data::Dict; tags...)
+    checkpoint(CHECKPOINTS[name], name, data; tags...)
 end
 
-function saver(config::AWSConfig, bucket::String, prefix::String; kwargs...)
-    function f(label, data)
-        parts = split(label, ".")
-        parts[end] = string(parts[end], ".jlso")
-        key = join(vcat([prefix], parts), "/")
+checkpoint(name::String, data::Pair...; tags...) = checkpoint(name, Dict(data...); tags...)
 
-        # Serialize the data to an IOBuffer
-        io = IOBuffer()
-        JLSO.save(io, data; kwargs...)
+checkpoint(name::String, data; tags...) = checkpoint(name, Dict("data" => data); tags...)
 
-        # Upload the serialized object (Vector{UInt8})
-        @mock s3_put(config, bucket, key, take!(io))
-    end
-
-    return f
+function checkpoint(prefix::Union{Module, String}, name::String, args...; kwargs...)
+    checkpoint("$prefix.$name", args...; kwargs...)
 end
 
-# TODO: Migrate the `saver` into a Saver/Loader API to allow the same settings to be used
-# for both saving and loading objects.
+"""
+    config(handler::Handler, labels::Vector{String})
+    config(handler::Handler, prefix::String)
+    config(labels::Vector{String}, args...; kwargs...)
+    config(prefix::String, args...; kwargs...)
+
+Configures the specified checkpoints with a `Handler`.
+If the first argument is not a `Handler` then all `args` and `kwargs` are passed to a
+`Handler` constructor for you.
+"""
+function config(handler::Handler, names::Vector{String})
+    for n in names
+        haskey(CHECKPOINTS, n) || warn(LOGGER, "$n is not a registered checkpoint")
+        CHECKPOINTS[n] = handler
+    end
+end
+
+function config(handler::Handler, prefix::Union{Module, String})
+    config(handler, filter(l -> startswith(l, prefix), available()))
+end
+
+function config(names::Vector{String}, args...; kwargs...)
+    config(Handler(args...; kwargs...), names)
+end
+
+function config(prefix::Union{Module, String}, args...; kwargs...)
+    config(Handler(args...; kwargs...), prefix)
+end
+
 
 """
     register([prefix], labels)
 
 Registers a checkpoint that may be configured at a later time.
 """
+function register end
+
 function register(labels::Vector{String})
     for l in labels
         if haskey(CHECKPOINTS, l)
             warn(LOGGER, "$l has already registered")
         else
-            CHECKPOINTS[l] = (k, v) -> nothing
+            CHECKPOINTS[l] = nothing
         end
     end
 end
@@ -89,45 +115,5 @@ function register(prefix::Union{Module, String}, labels::Vector{String})
     register(map(l -> join([prefix, l], "."), labels))
 end
 
-"""
-    config(backend::Function, labels::Vector{String})
-    config(backend::Function, prefix::String)
-
-Configures the specified checkpoints with the backend saving function.
-The backend function is expected to take the checkpoint label and data to be saved.
-The data is a `Dict` mapping variable names and values.
-"""
-function config(backend::Function, labels::Vector{String})
-    for l in labels
-        haskey(CHECKPOINTS, l) || warn(LOGGER, "$l is not a registered checkpoint label")
-        CHECKPOINTS[l] = backend
-    end
-end
-
-function config(backend::Function, prefix::Union{Module, String})
-    config(backend, filter(l -> startswith(l, prefix), available()))
-end
-
-"""
-    checkpoint([prefix], label, data)
-    checkpoint([prefix], label, data::Pair...)
-    checkpoint([prefix], label, data::Dict)
-
-Defines a data checkpoint with a specified `label` and values `data`.
-By default checkpoints are no-ops and need to be configured with a backend funciton.
-"""
-checkpoint(label::String, data::Dict) = CHECKPOINTS[label](label, data)
-checkpoint(label::String, data::Pair...) = checkpoint(label, Dict(data...))
-checkpoint(label::String, data) = checkpoint(label, Dict("data" => data))
-function checkpoint(prefix::Union{Module, String}, label::String, args...)
-    checkpoint(join([prefix, label], "."), args...)
-end
-
-"""
-    available() -> Vector{String}
-
-Returns a vector of all available (registered) checkpoints.
-"""
-available() = collect(keys(CHECKPOINTS))
 
 end  # module
