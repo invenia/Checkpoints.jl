@@ -1,20 +1,17 @@
 # Usage
 
-
-## Checkpointing
-
 Let's begin by creating a module (or package) that contains data we may want to save
 (or checkpoint).
 
 ```julia
 julia> module TestPkg
 
-       using Checkpoints: register, checkpoint
+       using Checkpoints: register, checkpoint, Session
 
        # We aren't using `@__MODULE__` because that would return TestPkg on 0.6 and Main.TestPkg on 0.7
        const MODULE = "TestPkg"
 
-       __init__() = register(MODULE, ["foo", "bar"])
+       __init__() = register(MODULE, ["foo", "bar", "baz])
 
        function foo(x::Matrix, y::Matrix)
            # Save multiple variables to 1 foo.jlso file by passing in pairs of variables
@@ -22,16 +19,28 @@ julia> module TestPkg
            return x * y
        end
 
-
        function bar(a::Vector)
-           # Save a single value for bar.jlso. The object name in that file defaults to "data".
-           checkpoint(MODULE, "bar", a)
+           # Save a single value for bar.jlso. The object name in that file defaults to "date".
+           # Any kwargs passed to checkpoint will be appended to the handler path passed to config.
+           # In this case the path would be `<prefix>/date=2017-01-01/TestPkg/bar.jlso`
+           checkpoint(MODULE, "bar", a; date="2017-01-01")
            return a * a'
        end
 
-       end
+       function baz(data::Dict)
+            # Check that saving multiple values to a Session works.
+            Session(MODULE, "baz") do s
+                for (k, v) in data
+                    checkpoint(s, k => v)
+                end
+            end
+        end
+    end
+
 TestPkg
 ```
+
+## Basic Checkpointing
 
 Now we get a list of all available checkpoints outside our module.
 ```julia
@@ -41,9 +50,28 @@ julia> Checkpoints.available()
 2-element Array{String,1}:
  "TestPkg.bar"
  "TestPkg.foo"
+ "TestPkg.baz"
 ```
 
-We can run our functions in `TestPkg` normally without saving any data.
+Let's start by looking at `TestPkg.foo`
+
+#### Package
+
+As a reference, here is the sample code for `TestPkg.foo` that we'll be calling.
+
+```julia
+...
+function foo(x::Matrix, y::Matrix)
+    # Save multiple variables to 1 foo.jlso file by passing in pairs of variables
+    checkpoint(MODULE, "foo", "x" => x, "y" => y)
+    return x * y
+end
+...
+```
+
+#### Application
+
+We can run our function `TestPkg.foo` normally without saving any data.
 ```julia
 julia> TestPkg.foo(rand(5, 5), rand(5, 5))
 5×5 Array{Float64,2}:
@@ -54,22 +82,13 @@ julia> TestPkg.foo(rand(5, 5), rand(5, 5))
  0.755876  1.62275  2.24326  0.727734  1.13352
 ```
 
-To start checkpointing the arguments `x` and `y` to `TestPkg.foo` we first need to define a
-backend saving function. The `Checkpoints.saver(prefix)` and `Checkpoints.saver(config, bucket, prefix)`
-methods are provided as an easy way to generate backend functions that save to either the
-local filesystem or an S3 bucket.
-```julia
-julia> f = Checkpoints.saver("checkpoints")
-(::f) (generic function with 1 method)
-```
-
-Now we just need to assign the backend function `f` to our checkpoints. In our case,
+Now we just need to assign a backend handler for our checkpoints. In our case,
 all checkpoints with the prefix `"TestPkg.foo"`.
 ```julia
-julia> Checkpoints.config(f, "TestPkg.foo")
+julia> Checkpoints.config("TestPkg.foo", "./checkpoints")
 ```
 
-To confirm that our checkpoint works will assign our expected `x` and `y values to local
+To confirm that our checkpoints work let's assign our expected `x` and `y values to local
 variables.
 ```julia
 julia> x = rand(5, 5)
@@ -120,6 +139,87 @@ julia> d["x"]
 ```
 
 As we can see, the value of `x` was successfully saved to `checkpoints/MyPkg/foo.jlso`.
+
+## Tags
+
+Tags can be used to append the handler path at runtime.
+
+#### Package
+
+As a reference, here is the sample code for `TestPkg.bar` that we'll be calling.
+
+```julia
+...
+function bar(a::Vector)
+    # Save a single value for bar.jlso. The object name in that file defaults to "date".
+    # Any kwargs passed to checkpoint will be appended to the handler path passed to config.
+    # In this case the path would be `<prefix>/date=2017-01-01/TestPkg/bar.jlso`
+    checkpoint(MODULE, "bar", a; date="2017-01-01")
+    return a * a'
+end
+...
+```
+
+#### Application
+
+```julia
+
+julia> a = rand(10)
+10-element Array{Float64,1}:
+ 0.166881
+ 0.817174
+ 0.413097
+ 0.955415
+ 0.139473
+ 0.49518
+ 0.416731
+ 0.431096
+ 0.126912
+ 0.600469
+
+julia> Checkpoints.config("TestPkg.bar", "./checkpoints")
+
+julia> JLSO.load("./checkpoints/date=2017-01-01/TestPkg/bar.jlso")
+Dict{String,Any} with 1 entry:
+  "data" => [0.166881, 0.817174, 0.413097, 0.955415, 0.139473, 0.49518, 0.416731, 0.431096, 0.126912, 0.600469]
+```
+
+## Sessions
+
+If you'd like to iteratively checkpoint data (e.g., in a loop) then we recommend using a session.
+
+#### Package
+
+As a reference, here is the sample code for `TestPkg.baz` that we'll be calling.
+
+```julia
+...
+function baz(data::Dict)
+    # Check that saving multiple values to a Session works.
+    Session(MODULE, "baz") do s
+        for (k, v) in data
+            checkpoint(s, k => v)
+        end
+    end
+end
+...
+```
+
+#### Application
+
+```julia
+julia> d = Dict("x" => rand(10), "y" => rand(10))
+Dict{String,Array{Float64,1}} with 2 entries:
+  "x" => [0.517666, 0.976474, 0.961658, 0.0933946, 0.877478, 0.428836, 0.0623459, 0.548001, 0.437111, 0.0783503]
+  "y" => [0.0623591, 0.0441436, 0.28578, 0.289995, 0.999642, 0.26299, 0.965148, 0.899285, 0.292166, 0.595886]
+
+julia> TestPkg.baz(d)
+
+julia> JLSO.load("./checkpoints/TestPkg/baz.jlso")
+Dict{String,Any} with 2 entries:
+  "x" => [0.517666, 0.976474, 0.961658, 0.0933946, 0.877478, 0.428836, 0.0623459, 0.548001, 0.437111, 0.0783503]
+  "y" => [0.0623591, 0.0441436, 0.28578, 0.289995, 0.999642, 0.26299, 0.965148, 0.899285, 0.292166, 0.595886]
+```
 
 ## Load Failures
 
