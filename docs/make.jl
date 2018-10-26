@@ -13,5 +13,7 @@ makedocs(
     authors="Rory Finnegan",
     assets=[
         "assets/invenia.css",
-     ],
+    ],
+    strict = true,
+    checkdocs = :none,
 )
