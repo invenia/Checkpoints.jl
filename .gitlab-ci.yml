@@ -140,14 +140,9 @@ stages:
     - ./julia-ci clean
 
 
-"Documentation":
+pages:
   stage: docs
-  tags:
-    - docs
   only:
-    - master
-    - develop
-    - docs
     - tags  # special keyword for all tags
   variables:
     JULIA_VERSION: "0.6"
@@ -157,6 +152,9 @@ stages:
     - ./julia-ci install $JULIA_VERSION
   script:
     - source julia-ci export
-    - ./julia-ci docs
+    - ./julia-ci publish-docs public
   after_script:
     - ./julia-ci clean
+  artifacts:
+    paths:
+      - public/
