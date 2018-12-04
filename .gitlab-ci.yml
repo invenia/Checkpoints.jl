@@ -143,7 +143,7 @@ stages:
 pages:
   stage: docs
   only:
-    - tags  # special keyword for all tags
+    - master
   variables:
     JULIA_VERSION: "0.6"
   before_script:
