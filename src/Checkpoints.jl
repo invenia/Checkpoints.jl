@@ -75,6 +75,7 @@ If the first argument is not a `Handler` then all `args` and `kwargs` are passed
 function config(handler::Handler, names::Vector{String})
     for n in names
         haskey(CHECKPOINTS, n) || warn(LOGGER, "$n is not a registered checkpoint")
+        debug(LOGGER, "Checkpoint $n set to use $(handler)")
         CHECKPOINTS[n] = handler
     end
 end
