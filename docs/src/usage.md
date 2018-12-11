@@ -11,7 +11,7 @@ julia> module TestPkg
        # We aren't using `@__MODULE__` because that would return TestPkg on 0.6 and Main.TestPkg on 0.7
        const MODULE = "TestPkg"
 
-       __init__() = register(MODULE, ["foo", "bar", "baz])
+       __init__() = register(MODULE, ["foo", "bar", "baz"])
 
        function foo(x::Matrix, y::Matrix)
            # Save multiple variables to 1 foo.jlso file by passing in pairs of variables
