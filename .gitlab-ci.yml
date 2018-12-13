@@ -1,160 +1,74 @@
+include:
+  - https://gitlab.invenia.ca/infrastructure/gitlab-ci-helper/raw/master/gitlab-templates/test_templates.yml
+  - https://gitlab.invenia.ca/infrastructure/gitlab-ci-helper/raw/master/gitlab-templates/coverage.yml
+  - https://gitlab.invenia.ca/infrastructure/gitlab-ci-helper/raw/master/gitlab-templates/documentation.yml
+
 stages:
   - test
   - coverage
-  - docs
+  - documentation
 
-.test_shell: &test_shell
-  artifacts:
-    name: "$CI_JOB_NAME coverage"
-    expire_in: 1 week
-    paths:
-      - "$CI_JOB_NAME coverage/"
-  before_script:
-    - curl -s -o julia-ci https://gitlab.invenia.ca/infrastructure/gitlab-ci-helper/raw/master/julia-ci
-    - chmod +x julia-ci
-    - ./julia-ci install-cred-helper
-    - ./julia-ci install $JULIA_VERSION
-  script:
-    - source julia-ci export
-    - ./julia-ci test
-    - ./julia-ci coverage
-  after_script:
-    - ./julia-ci clean
-
-
-.test_shell_0_6: &test_shell_0_6
-  variables:
-    JULIA_VERSION: "0.6"
-    ONLINE: ""
-  <<: *test_shell
-
-.test_shell_1_0: &test_shell_1_0
-  variables:
-    JULIA_VERSION: "1.0"
-    ONLINE: ""
-  <<: *test_shell
-
-.test_shell_nightly: &test_shell_nightly
-  variables:
-    JULIA_VERSION: "nightly"
-    ONLINE: ""
-  allow_failure: true
-  <<: *test_shell
-
-
-.test_docker: &test_docker
-  artifacts:
-    name: coverage
-    expire_in: 1 week
-    paths:
-      - "$CI_JOB_NAME coverage/"
-  variables:
-    ONLINE: ""
-  script:
-    - julia -e "Pkg.clone(pwd()); Pkg.build(\"$PKG_NAME\"); Pkg.test(\"$PKG_NAME\"; coverage=true)"
-    - julia-coverage $PKG_NAME
-
-.test_docker_0_6: &test_docker_0_6
-  image: 468665244580.dkr.ecr.us-east-1.amazonaws.com/julia-gitlab-ci:0.6
-  <<: *test_docker
+variables:
+  JULIA_IMAGE: 468665244580.dkr.ecr.us-east-1.amazonaws.com/julia-gitlab-ci:0.6
+  ONLINE: ""
 
 
 "0.6 (Mac)":
   tags:
     - mac
     - shell-ci
-  <<: *test_shell_0_6
+  extends: .test_shell_0_6
 
 "0.6 (Linux, 64-bit)":
   tags:
     - linux
     - 64-bit
     - docker-ci
-  <<: *test_docker_0_6
+  extends: .test_docker
 
 "0.6 (Linux, 32-bit)":
   tags:
     - linux
     - 32-bit
     - shell-ci
-  <<: *test_shell_0_6
+  extends: .test_shell_0_6
 
 "1.0 (Mac)":
   tags:
     - mac
     - shell-ci
-  <<: *test_shell_1_0
+  extends: .test_shell_1_0
 
 "1.0 (Linux, 64-bit)":
   tags:
     - linux
     - 64-bit
     - shell-ci
-  <<: *test_shell_1_0
+  extends: .test_shell_1_0
 
 "1.0 (Linux, 32-bit)":
   tags:
     - linux
     - 32-bit
     - shell-ci
-  <<: *test_shell_1_0
+  extends: .test_shell_1_0
 
 "Nightly (Mac)":
   tags:
     - mac
     - shell-ci
-  <<: *test_shell_nightly
+  extends: .test_shell_nightly
 
 "Nightly (Linux, 64-bit)":
   tags:
     - linux
     - 64-bit
     - shell-ci
-  <<: *test_shell_nightly
+  extends: .test_shell_nightly
 
 "Nightly (Linux, 32-bit)":
   tags:
     - linux
     - 32-bit
     - shell-ci
-  <<: *test_shell_nightly
-
-"Coverage":
-  stage: coverage
-  image: 468665244580.dkr.ecr.us-east-1.amazonaws.com/julia-gitlab-ci:0.6
-  coverage: /Test Coverage (\d+\.\d+%)/
-  artifacts:
-    name: combined_coverage
-    expire_in: 1 week
-    paths:
-      - combined_coverage/
-  tags:
-    - linux
-    - docker-ci
-  before_script:
-    - curl -s -o julia-ci https://gitlab.invenia.ca/infrastructure/gitlab-ci-helper/raw/master/julia-ci
-    - chmod +x julia-ci
-  script:
-    - ./julia-ci publish-coverage combined_coverage
-  after_script:
-    - ./julia-ci clean
-
-
-pages:
-  stage: docs
-  only:
-    - master
-  variables:
-    JULIA_VERSION: "0.6"
-  before_script:
-    - curl -s -o julia-ci https://gitlab.invenia.ca/infrastructure/gitlab-ci-helper/raw/master/julia-ci
-    - chmod +x julia-ci
-    - ./julia-ci install $JULIA_VERSION
-  script:
-    - source julia-ci export
-    - ./julia-ci publish-docs public
-  after_script:
-    - ./julia-ci clean
-  artifacts:
-    paths:
-      - public/
+  extends: .test_shell_nightly
