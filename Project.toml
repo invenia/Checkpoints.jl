@@ -1,0 +1,38 @@
+name = "Checkpoints"
+uuid = "b4a3413d-e481-5afc-88ff-bdfbd6a50dce"
+
+[deps]
+AWSCore = "4f1ea46c-232b-54a6-9b17-cc2d0f3e6598"
+AWSSDK = "0d499d91-6ae5-5d63-9313-12987b87d5ad"
+AWSTools = "83bcdc74-1232-581c-948a-f29122bf8259"
+BSON = "fbb218c0-5317-5bc6-957e-2ee96dd4b1f0"
+DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
+FilePathsBase = "48062228-2e41-5def-b9a4-89aafe57970f"
+Memento = "f28f55f0-a522-5efc-85c2-fe41dfb9b2d9"
+Mocking = "78c3b35d-d492-501b-9361-3d52fe80e533"
+Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
+Serialization = "9e88b42a-f829-5b0c-bbe9-9e923198166b"
+
+[compat]
+AWSCore = ">=0.3.0"
+AWSSDK = ">=0.2.0"
+AWSTools = ">=0.6.0"
+FilePathsBase = ">=0.4.0"
+Memento = ">=0.7.0"
+Mocking = ">=0.5.2"
+julia = "0.7, 1.0"
+
+[extras]
+AWSS3 = "1c724243-ef5b-51ab-93f4-b0a88ac62a95"
+AxisArrays = "39de3d68-74b9-583c-8d2d-e117c070f3a9"
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
+Distributed = "8ba89e20-285c-5b6f-9357-94700520ee1b"
+Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
+InteractiveUtils = "b77e0a4c-d291-57a0-90e8-8db25a27a240"
+Nullables = "4d1e1d77-625e-5b40-9113-a560ec7a8ecd"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+TimeZones = "f269a46b-ccf7-5d73-abea-4c690281aa53"
+
+[targets]
+test = ["AWSS3", "AxisArrays", "DataFrames", "Dates", "Distributed", "Distributions", "InteractiveUtils", "Nullables", "Random", "TimeZones"]

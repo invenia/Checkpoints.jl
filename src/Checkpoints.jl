@@ -12,7 +12,6 @@ using Memento
 using Mocking
 using FilePathsBase
 
-using Compat: @__MODULE__, Nothing, undef
 using DataStructures: DefaultDict
 
 export JLSO, checkpoint

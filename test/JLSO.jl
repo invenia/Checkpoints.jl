@@ -1,12 +1,11 @@
 using BSON
 using AWSSDK.Batch: describe_jobs
-using Compat
-using Compat.Test
-using Compat.Dates
-using Compat.Distributed
-using Compat.InteractiveUtils
-using Compat.Random
-using Compat.Serialization
+using Test
+using Dates
+using Distributed
+using InteractiveUtils
+using Random
+using Serialization
 using Checkpoints
 using Checkpoints.JLSO: JLSOFile, LOGGER
 using Memento
@@ -116,8 +115,7 @@ const DESCRIBE_JOBS_RESP = Dict(
                 # We need to do this separately because there appears to be a race
                 # condition on AxisArrays being loaded.
                 f = @spawnat pnum begin
-                    @eval Main using Compat
-                    @eval Main using Compat.Serialization
+                    @eval Main using Serialization
                     @eval Main using BSON
                     @eval Main using AxisArrays
                 end
@@ -145,11 +143,7 @@ const DESCRIBE_JOBS_RESP = Dict(
 
                     # Test failing to deserailize data because of missing modules will
                     # still return the raw bytes
-                    result = if VERSION < v"0.7.0"
-                        @test_warn(LOGGER, r"UndefVarError*", jlso["data"])
-                    else
-                        @test_warn(LOGGER, r"KeyError*", jlso["data"])
-                    end
+                    result = @test_warn(LOGGER, r"KeyError*", jlso["data"])
 
                     @test result == bytes
                 end
