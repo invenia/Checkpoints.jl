@@ -1,5 +1,5 @@
 julia 0.7
-AWSCore 0.3
+AWSCore 0.5.5
 AWSSDK 0.2.0
 AWSTools 0.6.0
 DataStructures

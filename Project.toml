@@ -14,7 +14,7 @@ Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
 Serialization = "9e88b42a-f829-5b0c-bbe9-9e923198166b"
 
 [compat]
-AWSCore = ">=0.3.0"
+AWSCore = ">=0.5.5"
 AWSSDK = ">=0.2.0"
 AWSTools = ">=0.6.0"
 FilePathsBase = ">=0.4.0"
