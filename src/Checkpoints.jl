@@ -9,18 +9,17 @@ module Checkpoints
 
 using AWSTools.S3
 using Memento
-using Mocking
 using FilePathsBase
+using JLSO
 
 using DataStructures: DefaultDict
 
-export JLSO, checkpoint
+export checkpoint
 
 const LOGGER = getlogger(@__MODULE__)
 
 __init__() = Memento.register(LOGGER)
 
-include("JLSO.jl")
 include("handler.jl")
 
 const CHECKPOINTS = Dict{String, Union{Nothing, Handler}}()

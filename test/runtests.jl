@@ -4,13 +4,13 @@ Mocking.enable(force=true)
 using Checkpoints
 using Test
 using AWSCore
+using JLSO
+using Random
 
 using AWSCore: AWSConfig
 using AWSS3: s3_put
 
 @testset "Checkpoints" begin
-    include("JLSO.jl")
-
     include("testpkg.jl")
 
     x = reshape(collect(1:100), 10, 10)
