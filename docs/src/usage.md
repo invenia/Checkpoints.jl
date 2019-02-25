@@ -121,7 +121,7 @@ julia> TestPkg.foo(x, y)
 julia> isfile("checkpoints/TestPkg/foo.jlso")
 true
 
-julia> using Checkpoints.JLSO
+julia> using JLSO
 
 julia> d = JLSO.load("checkpoints/TestPkg/foo.jlso")
 Dict{String,Any} with 2 entries:
@@ -229,12 +229,12 @@ If you're julia environment doesn't match the one used to save .jlso file
 (e.g., different julia version or missing packages) then you may get errors.
 
 ```julia
-julia> using Checkpoints, Checkpoints.JLSO
+julia> using Checkpoints, JLSO
 [ Info: Recompiling stale cache file /Users/rory/.playground/share/checkpoints/depot/compiled/v1.0/Checkpoints/E2USV.ji for Checkpoints [08085054-0ffc-5852-afcc-fc6ba29efde0]
 
 julia> d = JLSO.load("checkpoints/TestPkg/foo.jlso")
-[warn | Checkpoints.JLSO]: EOFError: read end of file
-[warn | Checkpoints.JLSO]: EOFError: read end of file
+[warn | JLSO]: EOFError: read end of file
+[warn | JLSO]: EOFError: read end of file
 Dict{String,Any} with 2 entries:
   "x" => UInt8[0x15, 0x00, 0x0e, 0x14, 0x02, 0xca, 0xca, 0x32, 0x20, 0x7b  …  0x98, 0x3f, 0xc6, 0xc9, 0x58, 0xc8, 0xb7, 0xd2, 0x9e, 0x3f]
   "y" => UInt8[0x15, 0x00, 0x0e, 0x14, 0x02, 0xca, 0xca, 0xfe, 0x60, 0xe0  …  0xcc, 0x3f, 0x9f, 0xb0, 0xc4, 0x03, 0xca, 0x26, 0xec, 0x3f]

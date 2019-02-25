@@ -1,22 +1,14 @@
-# This file is machine-generated - editing it directly is not advised
-
 [[AWSCore]]
 deps = ["Base64", "DataStructures", "Dates", "HTTP", "IniFile", "JSON", "LazyJSON", "MbedTLS", "Retry", "Sockets", "SymDict", "Test", "XMLDict"]
-git-tree-sha1 = "7750fad931afd52b84a8f014617daecc74235e92"
+git-tree-sha1 = "d9b2ada3bf289c504f765fec863cacea5aeb0541"
 uuid = "4f1ea46c-232b-54a6-9b17-cc2d0f3e6598"
-version = "0.5.5"
+version = "0.6.0"
 
 [[AWSS3]]
 deps = ["AWSCore", "Base64", "DataStructures", "Dates", "EzXML", "HTTP", "MbedTLS", "Retry", "SymDict", "Test", "XMLDict"]
 git-tree-sha1 = "4b7387c999f8c589542d1a449669d68a86583eca"
 uuid = "1c724243-ef5b-51ab-93f4-b0a88ac62a95"
 version = "0.5.0"
-
-[[AWSSDK]]
-deps = ["AWSCore"]
-git-tree-sha1 = "89c95eab2bc1128fe247c31e9774d47eb7ef0d40"
-uuid = "0d499d91-6ae5-5d63-9313-12987b87d5ad"
-version = "0.4.0"
 
 [[AWSTools]]
 deps = ["AWSCore", "AWSS3", "Base64", "Dates", "FilePathsBase", "MbedTLS", "Memento", "Mocking", "OrderedCollections", "Retry", "Test", "UUIDs", "XMLDict"]
@@ -40,7 +32,7 @@ uuid = "b99e7846-7c00-51b0-8f62-c81ae34c0232"
 version = "0.5.3"
 
 [[Checkpoints]]
-deps = ["AWSCore", "AWSSDK", "AWSTools", "BSON", "DataStructures", "FilePathsBase", "Memento", "Mocking", "Pkg", "Serialization"]
+deps = ["AWSTools", "DataStructures", "FilePathsBase", "JLSO", "Memento"]
 path = ".."
 uuid = "b4a3413d-e481-5afc-88ff-bdfbd6a50dce"
 version = "0.1.0+"
@@ -66,7 +58,7 @@ deps = ["Mmap"]
 uuid = "8bb1440f-4735-579b-a4ab-409b98df4dab"
 
 [[Distributed]]
-deps = ["Random", "Serialization", "Sockets"]
+deps = ["LinearAlgebra", "Random", "Serialization", "Sockets"]
 uuid = "8ba89e20-285c-5b6f-9357-94700520ee1b"
 
 [[DocStringExtensions]]
@@ -106,7 +98,7 @@ uuid = "83e8ac13-25f8-5344-8a64-a9f2b223428f"
 version = "0.5.0"
 
 [[InteractiveUtils]]
-deps = ["Markdown"]
+deps = ["LinearAlgebra", "Markdown"]
 uuid = "b77e0a4c-d291-57a0-90e8-8db25a27a240"
 
 [[IterTools]]
@@ -114,6 +106,12 @@ deps = ["SparseArrays", "Test"]
 git-tree-sha1 = "79246285c43602384e6f1943b3554042a3712056"
 uuid = "c8e1da08-722c-5040-9ed9-7db0dc04731e"
 version = "1.1.1"
+
+[[JLSO]]
+deps = ["BSON", "Dates", "Distributed", "InteractiveUtils", "Memento", "Pkg", "Random", "Serialization", "Test"]
+git-tree-sha1 = "df7ec1f6de5b7a66d409023b349da45ff462a442"
+uuid = "9da8a3cd-07a3-59c0-a743-3fdc52c30d11"
+version = "1.0.0"
 
 [[JSON]]
 deps = ["Dates", "Distributed", "Mmap", "Sockets", "Test", "Unicode"]
@@ -243,7 +241,7 @@ uuid = "f269a46b-ccf7-5d73-abea-4c690281aa53"
 version = "0.8.5"
 
 [[UUIDs]]
-deps = ["Random", "SHA"]
+deps = ["Random"]
 uuid = "cf7118a7-6976-5b1a-9a39-7adc72f591a4"
 
 [[Unicode]]
