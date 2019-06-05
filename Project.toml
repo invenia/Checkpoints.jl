@@ -1,5 +1,7 @@
 name = "Checkpoints"
 uuid = "b4a3413d-e481-5afc-88ff-bdfbd6a50dce"
+version = "0.2.1"
+authors = ["Invenia Technical Computing Corporation"]
 
 [deps]
 AWSTools = "83bcdc74-1232-581c-948a-f29122bf8259"
@@ -9,12 +11,13 @@ JLSO = "9da8a3cd-07a3-59c0-a743-3fdc52c30d11"
 Memento = "f28f55f0-a522-5efc-85c2-fe41dfb9b2d9"
 
 [compat]
-AWSCore = ">=0.5.5"
-AWSTools = ">=0.6.0"
-FilePathsBase = ">=0.4.0"
-Memento = ">=0.7.0"
-Mocking = ">=0.5.2"
-julia = "^1.0"
+AWSCore = "0.5.5, 0.6"
+AWSTools = "1.1.2"
+FilePathsBase = "0.4"
+Memento = "0.10, 0.11, 0.12"
+Mocking = "0.5.2"
+JLSO = "1"
+julia = "1.0"
 
 [extras]
 AWSCore = "4f1ea46c-232b-54a6-9b17-cc2d0f3e6598"
