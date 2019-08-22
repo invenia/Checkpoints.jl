@@ -1,14 +1,12 @@
-using Mocking
-Mocking.enable(force=true)
-
 using Checkpoints
 using Test
 using AWSCore
+using FilePathsBase
 using JLSO
 using Random
 
 using AWSCore: AWSConfig
-using AWSS3: s3_put
+using AWSS3: S3Path, s3_put, s3_list_buckets, s3_create_bucket
 
 @testset "Checkpoints" begin
     include("testpkg.jl")
@@ -38,23 +36,27 @@ using AWSS3: s3_put
         end
     end
 
-    @testset "S3 handler" begin
-        objects = Dict{String, Vector{UInt8}}()
+    if parse(Bool, get(ENV, "LIVE", "false"))
+        @testset "S3 handler" begin
+            config = AWSCore.aws_config()
+            prefix = "Checkpoints.jl/"
+            @show ENV
+            bucket = get(
+                ENV,
+                "TestBucketAndPrefix",
+                string(aws_account_number(config), "-tests")
+            )
+            bucket in s3_list_buckets(config) || s3_create_bucket(config, bucket)
 
-        s3_put_patch = @patch function s3_put(config::AWSConfig, bucket, prefix, data)
-            objects[joinpath(bucket, prefix)] = data
-        end
+            mkdir(Path("s3://$bucket/$prefix"); recursive=true, exist_ok=true)
 
-        config = AWSCore.aws_config()
-        bucket = "mybucket"
-        prefix = joinpath("mybackrun")
-        Checkpoints.config("TestPkg.bar", bucket, prefix)
+            mktmpdir(Path("s3://$bucket/Checkpoints.jl/")) do fp
+                Checkpoints.config("TestPkg.bar", fp)
 
-        apply(s3_put_patch) do
-            TestPkg.bar(a)
-            expected_path = joinpath(bucket, prefix, "date=2017-01-01", "TestPkg/bar.jlso")
-            io = IOBuffer(objects[expected_path])
-            @test JLSO.load(io)["data"] == a
+                TestPkg.bar(a)
+                expected_path = fp / "date=2017-01-01" / "TestPkg/bar.jlso"
+                @test JLSO.load(IOBuffer(read(expected_path)))["data"] == a
+            end
         end
     end
 

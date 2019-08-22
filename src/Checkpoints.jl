@@ -7,7 +7,7 @@ the ability to configure how those checkpoints save data externally
 """
 module Checkpoints
 
-using AWSTools.S3
+using AWSS3
 using Memento
 using FilePathsBase
 using JLSO
