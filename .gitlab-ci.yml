@@ -6,6 +6,7 @@ stages:
 include:
   - https://gitlab.invenia.ca/infrastructure/gitlab-ci-helper/raw/master/templates/hidden-jobs.yml
   - https://gitlab.invenia.ca/infrastructure/gitlab-ci-helper/raw/master/templates/teardown.yml
+  - https://gitlab.invenia.ca/infrastructure/gitlab-ci-helper/raw/master/templates/common-functions.yml
 
 "1.0 (Mac)":
   tags:
@@ -66,3 +67,25 @@ include:
     - 32-bit
     - shell-ci
   extends: .test_shell_nightly
+
+"Online Tests":
+  tags:
+    - linux
+    - docker-build
+    - shell-ci
+  variables:
+    LIVE: "true"  # Runs the online S3 tests against AWS
+  before_script:
+    - echo "$common_functions" > common && source common
+    - install_awscli
+    - install_cloudspy
+    - curl -sS -o julia-ci https://gitlab.invenia.ca/infrastructure/gitlab-ci-helper/raw/$CI_HELPER_BRANCH/julia-ci
+    - chmod +x julia-ci
+    - ./julia-ci install $JULIA_VERSION
+  script:
+    - source julia-ci export
+    - export PATH="$PATH:/usr/local/bin"
+    - eval $(aws-stack-outputs gitlab-ci-runners)   # Exports the test bucket to work in
+    - ./julia-ci test
+    - ./julia-ci coverage
+  extends: .test_shell_1_0

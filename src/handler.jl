@@ -12,7 +12,7 @@ FilePath are used to abstract away differences between paths on S3 or locally.
 """
 Handler(path::AbstractPath; kwargs...) = Handler(path, kwargs)
 Handler(path::String; kwargs...) = Handler(Path(path), kwargs)
-Handler(bucket::String, prefix::String; kwargs...) = Handler(S3Path(bucket, prefix), kwargs)
+Handler(bucket::String, prefix::String; kwargs...) = Handler(S3Path("s3://$bucket/$prefix"), kwargs)
 
 """
     path(handler, name; tags...)
@@ -55,15 +55,13 @@ end
 Write the JLSOFile to the path as bytes.
 """
 function commit!(handler::Handler{P}, path::P, jlso::JLSO.JLSOFile) where P <: AbstractPath
+    # NOTE: This is only necessary because FilePathsBase.FileBuffer needs to support
+    # write(::FileBuffer, ::UInt8)
+    # https://github.com/rofinn/FilePathsBase.jl/issues/45
     io = IOBuffer()
     write(io, jlso)
     bytes = take!(io)
-
-    # FilePathsBase should probably default to a no-op?
-    if P <: Union{PosixPath, WindowsPath} && hasparent(path)
-        mkdir(parent(path); recursive=true, exist_ok=true)
-    end
-
+    mkdir(parent(path); recursive=true, exist_ok=true)
     write(path, bytes)
 end
 
