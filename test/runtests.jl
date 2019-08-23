@@ -36,7 +36,7 @@ using AWSS3: S3Path, s3_put, s3_list_buckets, s3_create_bucket
         end
     end
 
-    if parse(Bool, get(ENV, "LIVE", "false"))
+    if get(ENV, "LIVE", "false") == "true"
         @testset "S3 handler" begin
             config = AWSCore.aws_config()
             prefix = "Checkpoints.jl/"
