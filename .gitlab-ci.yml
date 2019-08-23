@@ -6,32 +6,7 @@ stages:
 include:
   - https://gitlab.invenia.ca/infrastructure/gitlab-ci-helper/raw/master/templates/hidden-jobs.yml
   - https://gitlab.invenia.ca/infrastructure/gitlab-ci-helper/raw/master/templates/teardown.yml
-
-.awscli_install: &awscli_install
-  |
-  # Install AWS CLI
-  [[ $CI_DISPOSABLE_ENVIRONMENT == "true" ]] && SUDO="" || SUDO="sudo"
-  if [[ -x "$(command -v yum)" ]]; then
-      # Note: git and gcc is needed to install cloudspy
-      ${SUDO} yum -y install python3 python3-devel git gcc
-  elif [[ -x "$(command -v apt-get)" ]]; then
-      ${SUDO} apt-get -y update
-      ${SUDO} apt-get -y install python3 python3-dev python3-venv git
-  elif [[ -x "$(command -v brew)" ]]; then
-      brew install python || (brew upgrade python && brew cleanup python)
-  fi
-
-  python3 -m venv venv
-  source venv/bin/activate
-  pip install awscli
-  python --version
-  aws --version
-
-.cloudspy_install: &cloudspy_install
-  |
-  # Install Cloudspy in the env
-  pip install git+https://gitlab-ci-token:${CI_BUILD_TOKEN}@gitlab.invenia.ca/infrastructure/cloudspy.git#egg=cloudspy
-
+  - https://gitlab.invenia.ca/infrastructure/gitlab-ci-helper/raw/master/templates/common-functions.yml
 
 "1.0 (Mac)":
   tags:
@@ -100,10 +75,10 @@ include:
     - shell-ci
   variables:
     LIVE: "true"  # Runs the online S3 tests against AWS
-    AWS_DEFAULT_REGION: us-east-1
   before_script:
-    - *awscli_install
-    - *cloudspy_install
+    - echo "$common_functions" > common && source common
+    - install_awscli
+    - install_cloudspy
     - curl -sS -o julia-ci https://gitlab.invenia.ca/infrastructure/gitlab-ci-helper/raw/$CI_HELPER_BRANCH/julia-ci
     - chmod +x julia-ci
     - ./julia-ci install $JULIA_VERSION
@@ -111,7 +86,6 @@ include:
     - source julia-ci export
     - export PATH="$PATH:/usr/local/bin"
     - eval $(aws-stack-outputs gitlab-ci-runners)   # Exports the test bucket to work in
-    - printenv
     - ./julia-ci test
     - ./julia-ci coverage
   extends: .test_shell_1_0
