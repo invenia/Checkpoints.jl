@@ -40,7 +40,6 @@ using AWSS3: S3Path, s3_put, s3_list_buckets, s3_create_bucket
         @testset "S3 handler" begin
             config = AWSCore.aws_config()
             prefix = "Checkpoints.jl/"
-            @show ENV
             bucket = get(
                 ENV,
                 "TestBucketAndPrefix",
