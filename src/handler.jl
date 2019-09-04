@@ -66,7 +66,7 @@ function commit!(handler::Handler{P}, path::P, jlso::JLSO.JLSOFile) where P <: A
 end
 
 function checkpoint(handler::Handler, name::String, data::Dict; tags...)
-    debug(LOGGER, "Checkpoint $name triggerred, with tags: $(join(tags, ", ")).")
+    debug(LOGGER, "Checkpoint $name triggered, with tags: $(join(tags, ", ")).")
     jlso = JLSO.JLSOFile(Dict{String, Vector{UInt8}}(); handler.settings...)
     p = path(handler, name; tags...)
     stage!(handler, jlso, data)
@@ -77,6 +77,6 @@ end
 Define our no-op conditions just to be safe
 =#
 function checkpoint(handler::Nothing, name::String, data::Dict; tags...)
-    debug(LOGGER, "Checkpoint $name triggerred, but no handler has been set.")
+    debug(LOGGER, "Checkpoint $name triggered, but no handler has been set.")
     nothing
 end
