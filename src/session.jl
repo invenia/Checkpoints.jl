@@ -59,4 +59,4 @@ end
 
 checkpoint(s::Session, data::Pair...; tags...) = checkpoint(s, Dict(data...); tags...)
 
-checkpoint(s::Session, data; tags...) = checkpoint(s, Dict("data" => data); tags...)
+checkpoint(s::Session, data; tags...) = checkpoint(s, Dict(:data => data); tags...)

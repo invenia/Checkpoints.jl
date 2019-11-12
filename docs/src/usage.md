@@ -181,7 +181,7 @@ julia> Checkpoints.config("TestPkg.bar", "./checkpoints")
 
 julia> JLSO.load("./checkpoints/date=2017-01-01/TestPkg/bar.jlso")
 Dict{String,Any} with 1 entry:
-  "data" => [0.166881, 0.817174, 0.413097, 0.955415, 0.139473, 0.49518, 0.416731, 0.431096, 0.126912, 0.600469]
+  :data => [0.166881, 0.817174, 0.413097, 0.955415, 0.139473, 0.49518, 0.416731, 0.431096, 0.126912, 0.600469]
 ```
 
 ## Sessions

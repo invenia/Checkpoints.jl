@@ -14,7 +14,7 @@ function foo(x::Matrix, y::Matrix)
 end
 
 function bar(a::Vector)
-    # Save a single value for bar.jlso. The object name in that file defaults to "data".
+    # Save a single value for bar.jlso. The object name in that file defaults to :data.
     checkpoint(MODULE, "bar", a; date="2017-01-01")
     return a * a'
 end

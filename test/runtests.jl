@@ -54,7 +54,7 @@ using AWSS3: S3Path, s3_put, s3_list_buckets, s3_create_bucket
 
                 TestPkg.bar(a)
                 expected_path = fp / "date=2017-01-01" / "TestPkg/bar.jlso"
-                @test JLSO.load(IOBuffer(read(expected_path)))["data"] == a
+                @test JLSO.load(IOBuffer(read(expected_path)))[:data] == a
             end
         end
     end

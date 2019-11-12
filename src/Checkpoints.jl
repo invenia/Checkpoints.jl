@@ -54,7 +54,7 @@ end
 
 checkpoint(name::String, data::Pair...; tags...) = checkpoint(name, Dict(data...); tags...)
 
-checkpoint(name::String, data; tags...) = checkpoint(name, Dict("data" => data); tags...)
+checkpoint(name::String, data; tags...) = checkpoint(name, Dict(:data => data); tags...)
 
 function checkpoint(prefix::Union{Module, String}, name::String, args...; kwargs...)
     checkpoint("$prefix.$name", args...; kwargs...)
