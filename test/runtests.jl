@@ -31,8 +31,8 @@ using AWSS3: S3Path, s3_put, s3_list_buckets, s3_create_bucket
             @test !isfile(bar_path)
 
             data = JLSO.load(foo_path)
-            @test data["x"] == x
-            @test data["y"] == y
+            @test data[:x] == x
+            @test data[:y] == y
         end
     end
 
@@ -73,7 +73,10 @@ using AWSS3: S3Path, s3_put, s3_list_buckets, s3_create_bucket
         end
         @testset "Single" begin
             mktempdir() do path
-                d = Dict(zip(map(x -> randstring(4), 1:10), map(x -> rand(10), 1:10)))
+                d = Dict(zip(
+                    map(x -> Symbol(randstring(4)), 1:10),
+                    map(x -> rand(10), 1:10)
+                ))
                 Checkpoints.config("TestPkg.baz", path)
 
                 TestPkg.baz(d)
@@ -92,7 +95,10 @@ using AWSS3: S3Path, s3_put, s3_list_buckets, s3_create_bucket
         end
         @testset "Multi" begin
             mktempdir() do path
-                a = Dict(zip(map(x -> randstring(4), 1:10), map(x -> rand(10), 1:10)))
+                a = Dict(zip(
+                    map(x -> Symbol(randstring(4)), 1:10),
+                    map(x -> rand(10), 1:10)
+                ))
                 b = rand(10)
                 Checkpoints.config("TestPkg.qux" , path)
 
@@ -113,7 +119,7 @@ using AWSS3: S3Path, s3_put, s3_list_buckets, s3_create_bucket
                 end
 
                 data = JLSO.load(qux_b_path)
-                @test data["data"] == b
+                @test data[:data] == b
             end
         end
     end
