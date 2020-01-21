@@ -15,7 +15,7 @@ julia> module TestPkg
 
        function foo(x::Matrix, y::Matrix)
            # Save multiple variables to 1 foo.jlso file by passing in pairs of variables
-           checkpoint(MODULE, "foo", "x" => x, "y" => y)
+           checkpoint(MODULE, "foo", :x => x, :y => y)
            return x * y
        end
 
@@ -63,7 +63,7 @@ As a reference, here is the sample code for `TestPkg.foo` that we'll be calling.
 ...
 function foo(x::Matrix, y::Matrix)
     # Save multiple variables to 1 foo.jlso file by passing in pairs of variables
-    checkpoint(MODULE, "foo", "x" => x, "y" => y)
+    checkpoint(MODULE, "foo", :x => x, :y => y)
     return x * y
 end
 ...
@@ -181,7 +181,7 @@ julia> Checkpoints.config("TestPkg.bar", "./checkpoints")
 
 julia> JLSO.load("./checkpoints/date=2017-01-01/TestPkg/bar.jlso")
 Dict{String,Any} with 1 entry:
-  :data => [0.166881, 0.817174, 0.413097, 0.955415, 0.139473, 0.49518, 0.416731, 0.431096, 0.126912, 0.600469]
+  "data" => [0.166881, 0.817174, 0.413097, 0.955415, 0.139473, 0.49518, 0.416731, 0.431096, 0.126912, 0.600469]
 ```
 
 ## Sessions
@@ -208,10 +208,10 @@ end
 #### Application
 
 ```julia
-julia> d = Dict("x" => rand(10), "y" => rand(10))
+julia> d = Dict(:x => rand(10), :y => rand(10))
 Dict{String,Array{Float64,1}} with 2 entries:
-  "x" => [0.517666, 0.976474, 0.961658, 0.0933946, 0.877478, 0.428836, 0.0623459, 0.548001, 0.437111, 0.0783503]
-  "y" => [0.0623591, 0.0441436, 0.28578, 0.289995, 0.999642, 0.26299, 0.965148, 0.899285, 0.292166, 0.595886]
+  :x => [0.517666, 0.976474, 0.961658, 0.0933946, 0.877478, 0.428836, 0.0623459, 0.548001, 0.437111, 0.0783503]
+  :y => [0.0623591, 0.0441436, 0.28578, 0.289995, 0.999642, 0.26299, 0.965148, 0.899285, 0.292166, 0.595886]
 
 julia> TestPkg.baz(d)
 

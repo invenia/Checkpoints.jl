@@ -48,7 +48,7 @@ Alternatively, you can also checkpoint with to a session which stages the data t
 commited later by `commit!(session)`.
 Explicitly calling checkpoint on a handler is generally not advised, but is an option.
 """
-function checkpoint(name::String, data::Dict; tags...)
+function checkpoint(name::String, data::Dict{Symbol}; tags...)
     checkpoint(CHECKPOINTS[name], name, data; tags...)
 end
 
@@ -111,6 +111,8 @@ end
 function register(prefix::Union{Module, String}, labels::Vector{String})
     register(map(l -> join([prefix, l], "."), labels))
 end
+
+include("deprecated.jl")
 
 
 end  # module

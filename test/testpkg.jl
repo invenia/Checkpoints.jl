@@ -9,7 +9,7 @@ __init__() = register(MODULE, ["foo", "bar", "baz", "qux_a", "qux_b"])
 
 function foo(x::Matrix, y::Matrix)
     # Save multiple variables to 1 foo.jlso file by passing in pairs of variables
-    checkpoint(MODULE, "foo", "x" => x, "y" => y)
+    checkpoint(MODULE, "foo", :x => x, :y => y)
     return x * y
 end
 

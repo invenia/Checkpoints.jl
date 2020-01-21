@@ -31,8 +31,8 @@ using AWSS3: S3Path, s3_put, s3_list_buckets, s3_create_bucket
             @test !isfile(bar_path)
 
             data = JLSO.load(foo_path)
-            @test data[:x] == x
-            @test data[:y] == y
+            @test data["x"] == x
+            @test data["y"] == y
         end
     end
 
@@ -54,7 +54,7 @@ using AWSS3: S3Path, s3_put, s3_list_buckets, s3_create_bucket
 
                 TestPkg.bar(a)
                 expected_path = fp / "date=2017-01-01" / "TestPkg/bar.jlso"
-                @test JLSO.load(IOBuffer(read(expected_path)))[:data] == a
+                @test JLSO.load(IOBuffer(read(expected_path)))["data"] == a
             end
         end
     end
@@ -62,7 +62,7 @@ using AWSS3: S3Path, s3_put, s3_list_buckets, s3_create_bucket
     @testset "Sessions" begin
         @testset "No-op" begin
             mktempdir() do path
-                d = Dict(zip(map(x -> randstring(4), 1:10), map(x -> rand(10), 1:10)))
+                d = Dict(zip(map(x -> Symbol(randstring(4)), 1:10), map(x -> rand(10), 1:10)))
 
                 TestPkg.baz(d)
 
@@ -89,7 +89,7 @@ using AWSS3: S3Path, s3_put, s3_list_buckets, s3_create_bucket
 
                 data = JLSO.load(baz_path)
                 for (k, v) in data
-                    @test v == d[k]
+                    @test v == d[Symbol(k)]
                 end
             end
         end
@@ -115,12 +115,13 @@ using AWSS3: S3Path, s3_put, s3_list_buckets, s3_create_bucket
 
                 data = JLSO.load(qux_a_path)
                 for (k, v) in data
-                    @test v == a[k]
+                    @test v == a[Symbol(k)]
                 end
 
                 data = JLSO.load(qux_b_path)
-                @test data[:data] == b
+                @test data["data"] == b
             end
         end
     end
+    include("deprecated.jl")
 end
