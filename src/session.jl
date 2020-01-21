@@ -10,7 +10,7 @@ function Session(name::String)
     handler = CHECKPOINTS[name]
 
     objects = DefaultDict{AbstractPath, JLSO.JLSOFile}() do
-        JLSO.JLSOFile(Dict{String, Vector{UInt8}}(); handler.settings...)
+        JLSO.JLSOFile(Dict{Symbol, Vector{UInt8}}(); handler.settings...)
     end
 
     Session{typeof(handler)}(name, handler, objects)
@@ -48,7 +48,7 @@ function commit!(session::Session)
     end
 end
 
-function checkpoint(session::Session, data::Dict; tags...)
+function checkpoint(session::Session, data::Dict{Symbol}; tags...)
     # No-ops skip when handler is nothing
     session.handler === nothing && return nothing
 
@@ -59,4 +59,4 @@ end
 
 checkpoint(s::Session, data::Pair...; tags...) = checkpoint(s, Dict(data...); tags...)
 
-checkpoint(s::Session, data; tags...) = checkpoint(s, Dict("data" => data); tags...)
+checkpoint(s::Session, data; tags...) = checkpoint(s, Dict(:data => data); tags...)

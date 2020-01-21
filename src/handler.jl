@@ -37,11 +37,11 @@ function path(handler::Handler{P}, name::String; tags...) where P
 end
 
 """
-    stage!(handler::Handler, jlso::JLSOFIle, data::Dict)
+    stage!(handler::Handler, jlso::JLSOFIle, data::Dict{Symbol})
 
 Update the JLSOFile with the new data.
 """
-function stage!(handler::Handler, jlso::JLSO.JLSOFile, data::Dict)
+function stage!(handler::Handler, jlso::JLSO.JLSOFile, data::Dict{Symbol})
     for (k, v) in data
         jlso[k] = v
     end
@@ -65,9 +65,9 @@ function commit!(handler::Handler{P}, path::P, jlso::JLSO.JLSOFile) where P <: A
     write(path, bytes)
 end
 
-function checkpoint(handler::Handler, name::String, data::Dict; tags...)
+function checkpoint(handler::Handler, name::String, data::Dict{Symbol}; tags...)
     debug(LOGGER, "Checkpoint $name triggered, with tags: $(join(tags, ", ")).")
-    jlso = JLSO.JLSOFile(Dict{String, Vector{UInt8}}(); handler.settings...)
+    jlso = JLSO.JLSOFile(Dict{Symbol, Vector{UInt8}}(); handler.settings...)
     p = path(handler, name; tags...)
     stage!(handler, jlso, data)
     commit!(handler, p, jlso)
@@ -76,7 +76,7 @@ end
 #=
 Define our no-op conditions just to be safe
 =#
-function checkpoint(handler::Nothing, name::String, data::Dict; tags...)
+function checkpoint(handler::Nothing, name::String, data::Dict{Symbol}; tags...)
     debug(LOGGER, "Checkpoint $name triggered, but no handler has been set.")
     nothing
 end

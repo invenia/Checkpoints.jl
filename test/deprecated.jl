@@ -1,15 +1,5 @@
-using Checkpoints
-using Test
-using AWSCore
-using FilePathsBase
-using JLSO
-using Random
-
-using AWSCore: AWSConfig
-using AWSS3: S3Path, s3_put, s3_list_buckets, s3_create_bucket
-
-@testset "Checkpoints" begin
-    include("testpkg.jl")
+@testset "Deprecated" begin
+    include("testpkgdep.jl")
 
     x = reshape(collect(1:100), 10, 10)
     y = reshape(collect(101:200), 10, 10)
@@ -17,16 +7,16 @@ using AWSS3: S3Path, s3_put, s3_list_buckets, s3_create_bucket
 
     @testset "Local handler" begin
         mktempdir() do path
-            Checkpoints.config("TestPkg.foo", path)
+            Checkpoints.config("TestPkgDep.foo", path)
 
-            TestPkg.foo(x, y)
-            TestPkg.bar(a)
+            TestPkgDep.foo(x, y)
+            TestPkgDep.bar(a)
 
-            mod_path = joinpath(path, "TestPkg")
+            mod_path = joinpath(path, "TestPkgDep")
             @test isdir(mod_path)
 
-            foo_path = joinpath(path, "TestPkg", "foo.jlso")
-            bar_path = joinpath(path, "TestPkg", "bar.jlso")
+            foo_path = joinpath(path, "TestPkgDep", "foo.jlso")
+            bar_path = joinpath(path, "TestPkgDep", "bar.jlso")
             @test isfile(foo_path)
             @test !isfile(bar_path)
 
@@ -50,10 +40,10 @@ using AWSS3: S3Path, s3_put, s3_list_buckets, s3_create_bucket
             mkdir(Path("s3://$bucket/$prefix"); recursive=true, exist_ok=true)
 
             mktmpdir(Path("s3://$bucket/Checkpoints.jl/")) do fp
-                Checkpoints.config("TestPkg.bar", fp)
+                Checkpoints.config("TestPkgDep.bar", fp)
 
-                TestPkg.bar(a)
-                expected_path = fp / "date=2017-01-01" / "TestPkg/bar.jlso"
+                TestPkgDep.bar(a)
+                expected_path = fp / "date=2017-01-01" / "TestPkgDep/bar.jlso"
                 @test JLSO.load(IOBuffer(read(expected_path)))["data"] == a
             end
         end
@@ -62,60 +52,60 @@ using AWSS3: S3Path, s3_put, s3_list_buckets, s3_create_bucket
     @testset "Sessions" begin
         @testset "No-op" begin
             mktempdir() do path
-                d = Dict(zip(map(x -> Symbol(randstring(4)), 1:10), map(x -> rand(10), 1:10)))
+                d = Dict(zip(map(x -> randstring(4), 1:10), map(x -> rand(10), 1:10)))
 
-                TestPkg.baz(d)
+                TestPkgDep.baz(d)
 
-                mod_path = joinpath(path, "TestPkg")
-                baz_path = joinpath(path, "TestPkg", "baz.jlso")
+                mod_path = joinpath(path, "TestPkgDep")
+                baz_path = joinpath(path, "TestPkgDep", "baz.jlso")
                 @test !isfile(baz_path)
             end
         end
         @testset "Single" begin
             mktempdir() do path
                 d = Dict(zip(
-                    map(x -> Symbol(randstring(4)), 1:10),
+                    map(x -> randstring(4), 1:10),
                     map(x -> rand(10), 1:10)
                 ))
-                Checkpoints.config("TestPkg.baz", path)
+                Checkpoints.config("TestPkgDep.baz", path)
 
-                TestPkg.baz(d)
+                TestPkgDep.baz(d)
 
-                mod_path = joinpath(path, "TestPkg")
+                mod_path = joinpath(path, "TestPkgDep")
                 @test isdir(mod_path)
 
-                baz_path = joinpath(path, "TestPkg", "baz.jlso")
+                baz_path = joinpath(path, "TestPkgDep", "baz.jlso")
                 @test isfile(baz_path)
 
                 data = JLSO.load(baz_path)
                 for (k, v) in data
-                    @test v == d[Symbol(k)]
+                    @test v == d[k]
                 end
             end
         end
         @testset "Multi" begin
             mktempdir() do path
                 a = Dict(zip(
-                    map(x -> Symbol(randstring(4)), 1:10),
+                    map(x -> randstring(4), 1:10),
                     map(x -> rand(10), 1:10)
                 ))
                 b = rand(10)
-                Checkpoints.config("TestPkg.qux" , path)
+                Checkpoints.config("TestPkgDep.qux" , path)
 
-                TestPkg.qux(a, b)
+                TestPkgDep.qux(a, b)
 
-                mod_path = joinpath(path, "TestPkg")
+                mod_path = joinpath(path, "TestPkgDep")
                 @test isdir(mod_path)
 
-                qux_a_path = joinpath(path, "TestPkg", "qux_a.jlso")
+                qux_a_path = joinpath(path, "TestPkgDep", "qux_a.jlso")
                 @test isfile(qux_a_path)
 
-                qux_b_path = joinpath(path, "TestPkg", "qux_b.jlso")
+                qux_b_path = joinpath(path, "TestPkgDep", "qux_b.jlso")
                 @test isfile(qux_b_path)
 
                 data = JLSO.load(qux_a_path)
                 for (k, v) in data
-                    @test v == a[Symbol(k)]
+                    @test v == a[k]
                 end
 
                 data = JLSO.load(qux_b_path)
@@ -123,5 +113,4 @@ using AWSS3: S3Path, s3_put, s3_list_buckets, s3_create_bucket
             end
         end
     end
-    include("deprecated.jl")
 end
