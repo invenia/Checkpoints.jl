@@ -112,7 +112,4 @@ function register(prefix::Union{Module, String}, labels::Vector{String})
     register(map(l -> join([prefix, l], "."), labels))
 end
 
-include("deprecated.jl")
-
-
 end  # module
