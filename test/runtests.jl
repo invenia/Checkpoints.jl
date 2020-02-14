@@ -31,8 +31,8 @@ using AWSS3: S3Path, s3_put, s3_list_buckets, s3_create_bucket
             @test !isfile(bar_path)
 
             data = JLSO.load(foo_path)
-            @test data["x"] == x
-            @test data["y"] == y
+            @test data[:x] == x
+            @test data[:y] == y
         end
     end
 
@@ -54,9 +54,11 @@ using AWSS3: S3Path, s3_put, s3_list_buckets, s3_create_bucket
 
                 TestPkg.bar(a)
                 expected_path = fp / "date=2017-01-01" / "TestPkg/bar.jlso"
-                @test JLSO.load(IOBuffer(read(expected_path)))["data"] == a
+                @test JLSO.load(IOBuffer(read(expected_path)))[:data] == a
             end
         end
+    else
+        @warn("Skipping AWS S3 tests. Set `ENV[\"LIVE\"] = true` to run.")
     end
 
     @testset "Sessions" begin
@@ -119,9 +121,8 @@ using AWSS3: S3Path, s3_put, s3_list_buckets, s3_create_bucket
                 end
 
                 data = JLSO.load(qux_b_path)
-                @test data["data"] == b
+                @test data[:data] == b
             end
         end
     end
-    include("deprecated.jl")
 end
