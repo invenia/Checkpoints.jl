@@ -27,4 +27,4 @@ include:
     - eval $(aws-stack-outputs gitlab-ci-runners)   # Exports the test bucket to work in
     - ./julia-ci test
     - ./julia-ci coverage
-  extends: .test_shell_1_0
+  extends: .test_shell_1_3
