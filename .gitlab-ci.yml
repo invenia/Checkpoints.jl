@@ -18,13 +18,5 @@ include:
     LIVE: "true"  # Runs the online S3 tests against AWS
   before_script:
     - *setup
-    - curl -sS -o julia-ci https://gitlab.invenia.ca/infrastructure/gitlab-ci-helper/raw/$CI_HELPER_BRANCH/julia-ci
-    - chmod +x julia-ci
-    - ./julia-ci install $JULIA_VERSION
-  script:
-    - source julia-ci export
-    - export PATH="$PATH:/usr/local/bin"
     - eval $(aws-stack-outputs gitlab-ci-runners)   # Exports the test bucket to work in
-    - ./julia-ci test
-    - ./julia-ci coverage
   extends: .test_shell_1_3
