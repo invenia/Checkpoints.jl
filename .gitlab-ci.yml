@@ -1,0 +1,22 @@
+---
+include:
+  - project: invenia/gitlab-ci-helper
+    file: /templates/julia.yml
+
+.setup: &setup 
+  |
+  echo "$ci_init" > ci_init && source ci_init && rm ci_init
+  install_awscli
+  install_cloudspy
+
+"Online Tests":
+  tags:
+    - linux
+    - docker-build
+    - shell-ci
+  variables:
+    LIVE: "true"  # Runs the online S3 tests against AWS
+  before_script:
+    - *setup
+    - eval $(aws-stack-outputs gitlab-ci-runners)   # Exports the test bucket to work in
+  extends: .test_shell_1_3
