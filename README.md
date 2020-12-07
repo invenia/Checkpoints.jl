@@ -1,4 +1,4 @@
 # Checkpoints
-[![latest](https://img.shields.io/badge/docs-latest-blue.svg)](https://invenia.pages.invenia.ca/Checkpoints.jl/)
-[![build status](https://gitlab.invenia.ca/invenia/Checkpoints.jl/badges/master/build.svg)](https://gitlab.invenia.ca/invenia/Checkpoints.jl/commits/master)
-[![coverage](https://gitlab.invenia.ca/invenia/Checkpoints.jl/badges/master/coverage.svg)](https://gitlab.invenia.ca/invenia/Checkpoints.jl/commits/master)
+[![latest](https://img.shields.io/badge/docs-latest-blue.svg)](https://invenia.github.io/Checkpoints.jl/latest)
+[![build status](https://github.com/invenia/Checkpoints.jl/workflows/CI/badge.svg)](https://github.com/invenia/Checkpoints.jl/actions)
+[![coverage](https://codecov.io/gh/invenia/Checkpoints.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/invenia/Checkpoints.jl)
