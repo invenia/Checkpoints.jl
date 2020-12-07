@@ -3,4 +3,4 @@ Checkpoints = "b4a3413d-e481-5afc-88ff-bdfbd6a50dce"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 
 [compat]
-Documenter = "~0.21"
+Documenter = "0.25"
