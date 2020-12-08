@@ -7,10 +7,10 @@ uuid = "4f1ea46c-232b-54a6-9b17-cc2d0f3e6598"
 version = "0.6.17"
 
 [[AWSS3]]
-deps = ["AWSCore", "Base64", "Dates", "EzXML", "FilePathsBase", "HTTP", "LinearAlgebra", "MbedTLS", "Retry", "SymDict", "UUIDs", "XMLDict"]
-git-tree-sha1 = "2c0142a8f53a7b3ab299dd5824b895737f846586"
+deps = ["AWSCore", "Base64", "Dates", "EzXML", "FilePathsBase", "HTTP", "MbedTLS", "OrderedCollections", "Retry", "SymDict", "UUIDs", "XMLDict"]
+git-tree-sha1 = "324b90b727fa00e02dc426a3147d834e1e1cc9a7"
 uuid = "1c724243-ef5b-51ab-93f4-b0a88ac62a95"
-version = "0.6.12"
+version = "0.7.6"
 
 [[Artifacts]]
 deps = ["Pkg"]
@@ -86,16 +86,16 @@ uuid = "8f5d6c58-4d21-5cfd-889c-e3ad7ee6a615"
 version = "1.1.0"
 
 [[FilePathsBase]]
-deps = ["Dates", "LinearAlgebra", "Printf", "Test", "UUIDs"]
-git-tree-sha1 = "923fd3b942a11712435682eaa95cc8518c428b2c"
+deps = ["Dates", "Mmap", "Printf", "Test", "UUIDs"]
+git-tree-sha1 = "74b340c6f78b6ee2699f8bd2f790a97f0122349f"
 uuid = "48062228-2e41-5def-b9a4-89aafe57970f"
-version = "0.8.0"
+version = "0.9.6"
 
 [[HTTP]]
-deps = ["Base64", "Dates", "IniFile", "MbedTLS", "Sockets"]
-git-tree-sha1 = "c7ec02c4c6a039a98a15f955462cd7aea5df4508"
+deps = ["Base64", "Dates", "IniFile", "MbedTLS", "Sockets", "URIs"]
+git-tree-sha1 = "504ca74f27377a25ebfd63b1f5e6ec3e9fb14690"
 uuid = "cd3eb016-35fb-5094-929b-558a96fad6f3"
-version = "0.8.19"
+version = "0.9.1"
 
 [[IOCapture]]
 deps = ["Logging"]
@@ -282,6 +282,11 @@ deps = ["Random", "Test"]
 git-tree-sha1 = "7c53c35547de1c5b9d46a4797cf6d8253807108c"
 uuid = "3bb67fe8-82b1-5028-8e26-92a6c54297fa"
 version = "0.9.5"
+
+[[URIs]]
+git-tree-sha1 = "bc331715463c41d601cf8bfd38ca70a490af5c5b"
+uuid = "5c2747f8-b7ea-4ff2-ba2e-563bfd36b1d4"
+version = "1.1.0"
 
 [[UUIDs]]
 deps = ["Random", "SHA"]
