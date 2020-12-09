@@ -1,16 +1,16 @@
 # This file is machine-generated - editing it directly is not advised
 
-[[AWSCore]]
-deps = ["Base64", "Dates", "HTTP", "IniFile", "JSON", "LazyJSON", "MbedTLS", "Mocking", "OrderedCollections", "Retry", "Sockets", "SymDict", "UUIDs", "XMLDict"]
-git-tree-sha1 = "1d3c3af424f774d1b5f040f2f62ce51f2f790b70"
-uuid = "4f1ea46c-232b-54a6-9b17-cc2d0f3e6598"
-version = "0.6.17"
+[[AWS]]
+deps = ["Base64", "Compat", "Dates", "GitHub", "HTTP", "IniFile", "JSON", "MbedTLS", "Mocking", "OrderedCollections", "Retry", "Sockets", "UUIDs", "XMLDict"]
+git-tree-sha1 = "f9d218d1cbea1afe2b9b02e0d9b2a5c3a578dcc0"
+uuid = "fbe9abb3-538b-5e4e-ba9e-bc94f4f92ebc"
+version = "1.23.0"
 
 [[AWSS3]]
-deps = ["AWSCore", "Base64", "Dates", "EzXML", "FilePathsBase", "HTTP", "LinearAlgebra", "MbedTLS", "Retry", "SymDict", "UUIDs", "XMLDict"]
-git-tree-sha1 = "2c0142a8f53a7b3ab299dd5824b895737f846586"
+deps = ["AWS", "Base64", "Dates", "EzXML", "FilePathsBase", "HTTP", "MbedTLS", "OrderedCollections", "Retry", "SymDict", "UUIDs", "XMLDict"]
+git-tree-sha1 = "27e9309caa88c7419e9c2bba9b8f97c727959a84"
 uuid = "1c724243-ef5b-51ab-93f4-b0a88ac62a95"
-version = "0.6.12"
+version = "0.8.0"
 
 [[Artifacts]]
 deps = ["Pkg"]
@@ -86,10 +86,16 @@ uuid = "8f5d6c58-4d21-5cfd-889c-e3ad7ee6a615"
 version = "1.1.0"
 
 [[FilePathsBase]]
-deps = ["Dates", "LinearAlgebra", "Printf", "Test", "UUIDs"]
-git-tree-sha1 = "923fd3b942a11712435682eaa95cc8518c428b2c"
+deps = ["Dates", "Mmap", "Printf", "Test", "UUIDs"]
+git-tree-sha1 = "74b340c6f78b6ee2699f8bd2f790a97f0122349f"
 uuid = "48062228-2e41-5def-b9a4-89aafe57970f"
-version = "0.8.0"
+version = "0.9.6"
+
+[[GitHub]]
+deps = ["Base64", "Dates", "HTTP", "JSON", "MbedTLS", "Sockets"]
+git-tree-sha1 = "599dec6adb9f1b73b9c31c9cd4302a01d2575d81"
+uuid = "bc5e4493-9b4d-5f90-b8aa-2b2bcaad7a26"
+version = "5.2.0"
 
 [[HTTP]]
 deps = ["Base64", "Dates", "IniFile", "MbedTLS", "Sockets"]
@@ -134,12 +140,6 @@ deps = ["Dates", "Mmap", "Parsers", "Unicode"]
 git-tree-sha1 = "81690084b6198a2e1da36fcfda16eeca9f9f24e4"
 uuid = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
 version = "0.21.1"
-
-[[LazyJSON]]
-deps = ["JSON", "OrderedCollections", "PropertyDicts"]
-git-tree-sha1 = "ce08411caa70e0c9e780f142f59debd89a971738"
-uuid = "fc18253b-5e1b-504c-a4a2-9ece4944c004"
-version = "0.2.2"
 
 [[LibGit2]]
 deps = ["Printf"]
@@ -210,11 +210,6 @@ uuid = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
 [[Printf]]
 deps = ["Unicode"]
 uuid = "de0858da-6303-5e67-8744-51eddeeeb8d7"
-
-[[PropertyDicts]]
-git-tree-sha1 = "429d887daee312e73842cabe6b122e310b72e25d"
-uuid = "f8a19df8-e894-5f55-a973-672c1158cbca"
-version = "0.1.0"
 
 [[REPL]]
 deps = ["InteractiveUtils", "Markdown", "Sockets"]
