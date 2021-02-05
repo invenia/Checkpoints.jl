@@ -33,7 +33,7 @@ function path(handler::Handler{P}, name::String; tags...) where P
     parts = split(name, '.')
     parts[end] = string(parts[end], ".jlso")
 
-    return join(handler.path, prefix..., parts...)
+    return joinpath(handler.path, prefix..., parts...)
 end
 
 """
