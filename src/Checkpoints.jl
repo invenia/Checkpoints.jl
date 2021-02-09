@@ -10,6 +10,7 @@ module Checkpoints
 using AWSS3
 using Memento
 using FilePathsBase
+using FilePathsBase: /, join
 using JLSO
 
 using DataStructures: DefaultDict
