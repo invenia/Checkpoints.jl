@@ -1,7 +1,7 @@
 name = "Checkpoints"
 uuid = "b4a3413d-e481-5afc-88ff-bdfbd6a50dce"
 authors = "Invenia Technical Computing Corporation"
-version = "0.3.3"
+version = "0.3.4"
 
 [deps]
 AWSS3 = "1c724243-ef5b-51ab-93f4-b0a88ac62a95"
@@ -13,7 +13,7 @@ Memento = "f28f55f0-a522-5efc-85c2-fe41dfb9b2d9"
 [compat]
 AWSCore = "0.5.5, 0.6"
 AWSS3 = "0.6, 0.7, 0.8"
-DataStructures = "0.18"
+DataStructures = "0.17, 0.18"
 FilePathsBase = "0.6, 0.7, 0.8, 0.9"
 JLSO = "2"
 Memento = "0.10, 0.11, 0.12, 0.13, 1"
