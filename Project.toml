@@ -1,7 +1,7 @@
 name = "Checkpoints"
 uuid = "b4a3413d-e481-5afc-88ff-bdfbd6a50dce"
 authors = "Invenia Technical Computing Corporation"
-version = "0.3.3"
+version = "0.3.4"
 
 [deps]
 AWSS3 = "1c724243-ef5b-51ab-93f4-b0a88ac62a95"
