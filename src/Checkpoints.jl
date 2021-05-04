@@ -24,8 +24,22 @@ __init__() = Memento.register(LOGGER)
 include("handler.jl")
 
 const CHECKPOINTS = Dict{String, Union{Nothing, Handler}}()
+const TAGS = Dict{Symbol, Any}()
 
 include("session.jl")
+
+"""
+    application_tags()
+
+TODO: add docstring
+"""
+application_tags() = TAGS
+function application_tags(tags::Pair...)
+    for (k, v) in tags
+        TAGS[k] = v
+    end
+end
+
 
 """
     available() -> Vector{String}
