@@ -24,7 +24,7 @@ Names with a '.' separators will be used to form subdirectories
 """
 function path(handler::Handler{P}, name::String; tags...) where P
     isdisjoint(application_tags(), tags) || ArgumentError("application and package tags can not be the same")
-    all_tags = Iterators.flatten(application_tags(), tags)
+    all_tags = collect(Iterators.flatten((application_tags(), tags)))
 
     # Build up a path prefix based on the tags passed in.
     prefix = Vector{String}(undef, length(all_tags))

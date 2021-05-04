@@ -34,6 +34,7 @@ include("session.jl")
 TODO: add docstring
 """
 application_tags() = TAGS
+application_tags(::Nothing) = empty!(TAGS)
 function application_tags(tags::Pair...)
     for (k, v) in tags
         TAGS[k] = v
