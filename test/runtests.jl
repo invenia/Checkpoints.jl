@@ -66,6 +66,8 @@ Distributed.addprocs(5)
             TestPkg.tagscheck(x)
         end
         @test isfile(joinpath(path, "app_tag=d", "package_tag=1", "TestPkg", "tagscheck.jlso"))
+
+        Checkpoints.application_tags(nothing)
     end
 
     if get(ENV, "LIVE", "false") == "true"
