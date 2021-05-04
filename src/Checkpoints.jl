@@ -30,8 +30,10 @@ include("session.jl")
 
 """
     application_tags()
+    application_tags(tags::Pair...)
+    application_tags(::Nothing)
 
-TODO: add docstring
+Returns, changes, or deletes the application-level tags.
 """
 application_tags() = TAGS
 application_tags(::Nothing) = empty!(TAGS)
