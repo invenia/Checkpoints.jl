@@ -31,13 +31,11 @@ const CHECKPOINTS = Dict{String, Union{Nothing, Handler}}()
 include("session.jl")
 
 """
-DOCSTRING
+DOCSTRING TODO
 """
 function with_tags(f::Function, tags::Pair...)
     with_context(f, TAGS => OrderedDict(TAGS[]..., tags...))
 end
-
-use_tags() = (println("TAGS are: ", TAGS[]); return 1)
 
 """
     available() -> Vector{String}
