@@ -8,7 +8,9 @@ the ability to configure how those checkpoints save data externally
 module Checkpoints
 
 using AWSS3
+using ContextVariablesX
 using Memento
+using OrderedCollections
 using FilePathsBase
 using FilePathsBase: /, join
 using JLSO
@@ -24,8 +26,18 @@ __init__() = Memento.register(LOGGER)
 include("handler.jl")
 
 const CHECKPOINTS = Dict{String, Union{Nothing, Handler}}()
+@contextvar TAGS = OrderedDict{Symbol, Any}()
 
 include("session.jl")
+
+"""
+DOCSTRING
+"""
+function with_tags(f::Function, tags::Pair...)
+    with_context(f, TAGS => OrderedDict(TAGS[]..., tags...))
+end
+
+use_tags() = (println("TAGS are: ", TAGS[]); return 1)
 
 """
     available() -> Vector{String}

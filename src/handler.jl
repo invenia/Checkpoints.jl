@@ -23,9 +23,12 @@ Names with a '.' separators will be used to form subdirectories
 (e.g., "Foo.bar.x" will be saved to "\$prefix/Foo/bar/x.jlso").
 """
 function path(handler::Handler{P}, name::String; tags...) where P
+    isdisjoint(TAGS[], tags) || ArgumentError("application and package tags can not be the same TODO: rephrase")
+    all_tags = collect(Iterators.flatten((TAGS[], tags)))
+
     # Build up a path prefix based on the tags passed in.
-    prefix = Vector{String}(undef, length(tags))
-    for (i, t) in enumerate(tags)
+    prefix = Vector{String}(undef, length(all_tags))
+    for (i, t) in enumerate(all_tags)
         prefix[i] = string(first(t), "=", last(t))
     end
 
