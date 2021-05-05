@@ -36,7 +36,7 @@ include("session.jl")
 
 Returns, changes, or deletes the application-level tags.
 """
-application_tags() = TAGS
+application_tags() = return TAGS
 application_tags(::Nothing) = empty!(TAGS)
 function application_tags(tags::Pair...)
     for (k, v) in tags
