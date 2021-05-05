@@ -46,28 +46,44 @@ Distributed.addprocs(5)
             Checkpoints.config("TestPkg.tagscheck", path)
         end
 
-        # run without the application-level checkpoints
-        TestPkg.tagscheck(x)
-        @test isfile(joinpath(path, "package_tag=1", "TestPkg", "tagscheck.jlso"))
+        @testset "no app-level tags" begin
+            TestPkg.tagscheck(x)
+            @test isfile(joinpath(path, "package_tag=1", "TestPkg", "tagscheck.jlso"))
+        end
 
-        # run with the application-level checkpoints
-        for app_tag in ["a", "b"]
-            Checkpoints.with_tags(:app_tag => app_tag) do
+        @testset "single process app-level tags" begin
+            Checkpoints.with_tags(:app_tag => "a") do
                 TestPkg.tagscheck(x)
             end
+            @test isfile(joinpath(path, "app_tag=a", "package_tag=1", "TestPkg", "tagscheck.jlso"))
         end
-        @test isfile(joinpath(path, "app_tag=a", "package_tag=1", "TestPkg", "tagscheck.jlso"))
 
-        # run concurrently with the application-level checkpoints
-        @test Distributed.nworkers() > 1
-        pmap(["a", "b", "c", "d", "e", "f"]) do app_tag
-            Checkpoints.with_tags(:app_tag => app_tag) do
-                sleep(rand()) # make sure not overwritten in the meantime
-                @test Checkpoints.TAGS[][:app_tag] == app_tag
-                TestPkg.tagscheck(x)
+        @testset "multi-process app-level tags" begin
+            @test Distributed.nworkers() > 1
+            pmap(["a", "b", "c", "d", "e", "f"]) do app_tag
+                Checkpoints.with_tags(:app_tag => app_tag) do
+                    sleep(rand()) # to make sure not overwritten in the meantime
+                    @test Checkpoints.TAGS[][:app_tag] == app_tag
+                    TestPkg.tagscheck(x)
+                end
             end
+            @test isfile(joinpath(path, "app_tag=d", "package_tag=1", "TestPkg", "tagscheck.jlso"))
         end
-        @test isfile(joinpath(path, "app_tag=d", "package_tag=1", "TestPkg", "tagscheck.jlso"))
+
+        @testset "nested app-level tags" begin
+            Checkpoints.with_tags(:first => "first") do
+                Checkpoints.with_tags(:second => "second") do
+                    TestPkg.tagscheck(x) # both first and second
+                end
+                TestPkg.tagscheck(x) # only first
+            end
+            @test isfile(joinpath(path, "first=first", "second=second", "package_tag=1", "TestPkg", "tagscheck.jlso"))
+            @test isfile(joinpath(path, "first=first", "package_tag=1", "TestPkg", "tagscheck.jlso"))
+        end
+
+        @testset "multithreaded" begin
+            @test true # TODO
+        end
     end
 
     if get(ENV, "LIVE", "false") == "true"
