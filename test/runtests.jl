@@ -42,7 +42,7 @@ Distributed.addprocs(5)
 
     @testset "Application-level tags" begin
         @everywhere begin
-            path = "testpath"
+            path = "testpath" # TODO: test on mktempdir
             Checkpoints.config("TestPkg.tagscheck", path)
         end
 
@@ -82,7 +82,18 @@ Distributed.addprocs(5)
         end
 
         @testset "multithreaded" begin
-            @test true # TODO
+            if Threads.nthreads() > 1
+                Threads.@threads for t = 1:10
+                    Checkpoints.with_tags(:thread => t) do
+                        sleep(rand())
+                        @test Checkpoints.TAGS[][:thread] == t
+                        TestPkg.tagscheck(x)
+                    end
+                end
+                @test isfile(joinpath(path, "thread=8", "package_tag=1", "TestPkg", "tagscheck.jlso"))
+            else
+                warn("Skipping multi-threading tests. Start with `julia -t n` for n threads.")
+            end
         end
     end
 
