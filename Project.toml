@@ -10,6 +10,7 @@ Distributed = "8ba89e20-285c-5b6f-9357-94700520ee1b"
 FilePathsBase = "48062228-2e41-5def-b9a4-89aafe57970f"
 JLSO = "9da8a3cd-07a3-59c0-a743-3fdc52c30d11"
 Memento = "f28f55f0-a522-5efc-85c2-fe41dfb9b2d9"
+OrderedCollections = "bac558e1-5e72-5ebc-8fee-abe8a469f55d"
 
 [compat]
 AWSCore = "0.5.5, 0.6"

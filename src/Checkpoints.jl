@@ -9,6 +9,7 @@ module Checkpoints
 
 using AWSS3
 using Memento
+using OrderedCollections
 using FilePathsBase
 using FilePathsBase: /, join
 using JLSO
@@ -24,7 +25,7 @@ __init__() = Memento.register(LOGGER)
 include("handler.jl")
 
 const CHECKPOINTS = Dict{String, Union{Nothing, Handler}}()
-const TAGS = Dict{Symbol, Any}()
+const TAGS = OrderedDict{Symbol, Any}()
 
 include("session.jl")
 
