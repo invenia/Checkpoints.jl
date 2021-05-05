@@ -5,7 +5,7 @@ using Checkpoints: register, checkpoint, Session
 # We aren't using `@__MODULE__` because that would return TestPkg on 0.6 and Main.TestPkg on 0.7
 const MODULE = "TestPkg"
 
-__init__() = register(MODULE, ["foo", "bar", "baz", "qux_a", "qux_b"])
+__init__() = register(MODULE, ["foo", "bar", "baz", "qux_a", "qux_b", "tagscheck"])
 
 function foo(x::Matrix, y::Matrix)
     # Save multiple variables to 1 foo.jlso file by passing in pairs of variables
@@ -36,6 +36,12 @@ function qux(a::Dict, b::Vector)
         end
 
         checkpoint(sb, b)
+    end
+end
+
+function tagscheck(x)
+    for package_tag in [1, 2, 3]
+        checkpoint(MODULE, "tagscheck", :x => x; package_tag=package_tag)
     end
 end
 

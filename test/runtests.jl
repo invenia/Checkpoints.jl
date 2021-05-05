@@ -1,4 +1,5 @@
 using Checkpoints
+using Distributed
 using Test
 using AWSCore
 using FilePathsBase
@@ -8,8 +9,11 @@ using Random
 using AWSCore: AWSConfig
 using AWSS3: S3Path, s3_put, s3_list_buckets, s3_create_bucket
 
+Distributed.addprocs(5)
+@everywhere using Checkpoints
+
 @testset "Checkpoints" begin
-    include("testpkg.jl")
+    @everywhere include("testpkg.jl")
 
     x = reshape(collect(1:100), 10, 10)
     y = reshape(collect(101:200), 10, 10)
@@ -34,6 +38,36 @@ using AWSS3: S3Path, s3_put, s3_list_buckets, s3_create_bucket
             @test data[:x] == x
             @test data[:y] == y
         end
+    end
+
+    @testset "Application-level tags" begin
+        @everywhere begin
+            path = "testpath"
+            Checkpoints.config("TestPkg.tagscheck", path)
+        end
+
+        # run without the application-level checkpoints
+        TestPkg.tagscheck(x)
+        @test isfile(joinpath(path, "package_tag=1", "TestPkg", "tagscheck.jlso"))
+
+        # run with the application-level checkpoints
+        for app_tag in ["a", "b"]
+            Checkpoints.with_tags(:app_tag => app_tag) do
+                TestPkg.tagscheck(x)
+            end
+        end
+        @test isfile(joinpath(path, "app_tag=a", "package_tag=1", "TestPkg", "tagscheck.jlso"))
+
+        # run concurrently with the application-level checkpoints
+        @test Distributed.nworkers() > 1
+        pmap(["a", "b", "c", "d", "e", "f"]) do app_tag
+            Checkpoints.with_tags(:app_tag => app_tag) do
+                sleep(rand()) # make sure not overwritten in the meantime
+                @test Checkpoints.TAGS[][:app_tag] == app_tag
+                TestPkg.tagscheck(x)
+            end
+        end
+        @test isfile(joinpath(path, "app_tag=d", "package_tag=1", "TestPkg", "tagscheck.jlso"))
     end
 
     if get(ENV, "LIVE", "false") == "true"
