@@ -25,25 +25,22 @@ __init__() = Memento.register(LOGGER)
 include("handler.jl")
 
 const CHECKPOINTS = Dict{String, Union{Nothing, Handler}}()
-@contextvar TAGS::Tuple{Vararg{Pair{Symbol, Any}}} = Tuple{}()
+@contextvar CONTEXT_TAGS::Tuple{Vararg{Pair{Symbol, Any}}} = Tuple{}()
 
 include("session.jl")
 
 """
-    with_tags(f::Function, tags::Pair...)
+    with_tags(f::Function, context_tags::Pair...)
 
-Runs the function `f` with dynamically scoped [1] `tags`. These tags are used in addition
-to the tags provided to the [`checkpoint`](@ref) function when determining where to save
-the checkpoints.
-
-Nested `with_tags` are allowed. The values of tags in the innermost `with_tags` call take
-precedence. The `tags` passed to `with_tags` should be disjoint from the tags used in the
+Creates a new context and runs the function `f` within the context. `context_tags` are used
+everywhere inside the context in addition to the tags provided directly in the
 [`checkpoint`](@ref) call.
 
-[1] https://en.wikipedia.org/wiki/Scope_(computer_science)#Lexical_scope_vs._dynamic_scope_2
+Nested contexts (nested `with_tags` calls) are allowed. Duplicate tag names and values are
+allowed, including the tags provided directly in the [`checkpoint`](@ref) call.
 """
-function with_tags(f::Function, tags::Pair...)
-    with_context(f, TAGS => tuple(TAGS[]..., tags...))
+function with_tags(f::Function, context_tags::Pair...)
+    with_context(f, CONTEXT_TAGS => tuple(CONTEXT_TAGS[]..., context_tags...))
 end
 
 """

@@ -95,7 +95,7 @@ Distributed.addprocs(5)
                 pmap(["a", "b", "c", "d", "e", "f"]) do tag
                     Checkpoints.with_tags(:context_tag => tag) do
                         sleep(rand()) # to make sure not overwritten in the meantime
-                        @test Dict(Checkpoints.TAGS[]...)[:context_tag] == tag
+                        @test Dict(Checkpoints.CONTEXT_TAGS[]...)[:context_tag] == tag
                         TestPkg.tagscheck(x)
                     end
                 end
@@ -107,7 +107,7 @@ Distributed.addprocs(5)
                     Threads.@threads for t = 1:10
                         Checkpoints.with_tags(:thread => t) do
                             sleep(rand())
-                            @test Dict(Checkpoints.TAGS[]...)[:thread] == t
+                            @test Dict(Checkpoints.CONTEXT_TAGS[]...)[:thread] == t
                             TestPkg.tagscheck(x)
                         end
                     end

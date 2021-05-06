@@ -25,8 +25,8 @@ Names with a '.' separators will be used to form subdirectories
 function path(handler::Handler{P}, name::String; tags...) where P
     with_tags(tags...) do
         # Build up a path prefix based on the tags passed in.
-        prefix = Vector{String}(undef, length(TAGS[]))
-        for (i, t) in enumerate(TAGS[])
+        prefix = Vector{String}(undef, length(CONTEXT_TAGS[]))
+        for (i, t) in enumerate(CONTEXT_TAGS[])
             prefix[i] = string(first(t), "=", last(t))
         end
 
