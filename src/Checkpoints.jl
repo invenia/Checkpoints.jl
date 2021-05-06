@@ -9,13 +9,12 @@ module Checkpoints
 
 using AWSS3
 using ContextVariablesX
-using Memento
-using OrderedCollections
+using DataStructures: DefaultDict
 using FilePathsBase
 using FilePathsBase: /, join
 using JLSO
-
-using DataStructures: DefaultDict
+using Memento
+using OrderedCollections
 
 export checkpoint
 
@@ -31,7 +30,17 @@ const CHECKPOINTS = Dict{String, Union{Nothing, Handler}}()
 include("session.jl")
 
 """
-DOCSTRING TODO
+    with_tags(f::Function, tags::Pair...)
+
+Runs the function `f` with dynamically scoped [1] `tags`. These tags are used in addition
+to the tags provided to the [`checkpoint`](@ref) function when determining where to save
+the checkpoints.
+
+Nested `with_tags` are allowed. The values of tags in the innermost `with_tags` call take
+precedence. The `tags` passed to `with_tags` should be disjoint from the tags used in the
+[`checkpoint`](@ref) call.
+
+[1] https://en.wikipedia.org/wiki/Scope_(computer_science)#Lexical_scope_vs._dynamic_scope_2
 """
 function with_tags(f::Function, tags::Pair...)
     with_context(f, TAGS => OrderedDict(TAGS[]..., tags...))
