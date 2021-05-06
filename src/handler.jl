@@ -23,8 +23,9 @@ Names with a '.' separators will be used to form subdirectories
 (e.g., "Foo.bar.x" will be saved to "\$prefix/Foo/bar/x.jlso").
 """
 function path(handler::Handler{P}, name::String; tags...) where P
-    joint_tags = intersect(TAGS[], tags)
-    isempty(joint_tags) || ArgumentError("Application- and package-level tags both contain $(joint_tags).")
+    # deal with dynamic scope tags and checkpoint tags
+    joint_tags = intersect(keys(TAGS[]), keys(tags))
+    isempty(joint_tags) || throw(ArgumentError("Application- and package-level tags both contain $(joint_tags)."))
     all_tags = collect(Iterators.flatten((TAGS[], tags)))
 
     # Build up a path prefix based on the tags passed in.
