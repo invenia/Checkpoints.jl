@@ -25,7 +25,7 @@ __init__() = Memento.register(LOGGER)
 include("handler.jl")
 
 const CHECKPOINTS = Dict{String, Union{Nothing, Handler}}()
-@contextvar TAGS = Pair{Symbol, Any}[]
+@contextvar TAGS::Tuple{Vararg{Pair{Symbol, Any}}} = Tuple{}()
 
 include("session.jl")
 
@@ -43,7 +43,7 @@ precedence. The `tags` passed to `with_tags` should be disjoint from the tags us
 [1] https://en.wikipedia.org/wiki/Scope_(computer_science)#Lexical_scope_vs._dynamic_scope_2
 """
 function with_tags(f::Function, tags::Pair...)
-    with_context(f, TAGS => [TAGS[]..., tags...])
+    with_context(f, TAGS => tuple(TAGS[]..., tags...))
 end
 
 """
