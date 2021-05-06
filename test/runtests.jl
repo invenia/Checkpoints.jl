@@ -92,7 +92,7 @@ Distributed.addprocs(5)
                 end
                 @test isfile(joinpath(path, "thread=8", "package_tag=1", "TestPkg", "tagscheck.jlso"))
             else
-                warn("Skipping multi-threading tests. Start with `julia -t n` for n threads.")
+                @warn("Skipping multi-threading tests. Start with `julia -t n` for n threads.")
             end
         end
     end
