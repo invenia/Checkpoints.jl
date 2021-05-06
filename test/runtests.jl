@@ -80,6 +80,15 @@ Distributed.addprocs(5)
                 end
                 @test isfile(joinpath(path, "first=first", "second=second", "package_tag=1", "TestPkg", "tagscheck.jlso"))
                 @test isfile(joinpath(path, "first=first", "package_tag=1", "TestPkg", "tagscheck.jlso"))
+
+                Checkpoints.with_tags(:same => "outer") do
+                    Checkpoints.with_tags(:same => "inner") do
+                        TestPkg.tagscheck(x) # make sure that inner exists
+                    end
+                    TestPkg.tagscheck(x) # and that outer tag is still used after being overwritten as inner
+                end
+                @test isfile(joinpath(path, "same=inner", "package_tag=1", "TestPkg", "tagscheck.jlso"))
+                @test isfile(joinpath(path, "same=outer", "package_tag=1", "TestPkg", "tagscheck.jlso"))
             end
 
             @testset "multithreaded" begin
@@ -94,6 +103,12 @@ Distributed.addprocs(5)
                     @test isfile(joinpath(path, "thread=8", "package_tag=1", "TestPkg", "tagscheck.jlso"))
                 else
                     @warn("Skipping multi-threading tests. Start with `julia -t n` for n threads.")
+                end
+            end
+
+            @testset "errors on same tags" begin
+                Checkpoints.with_tags(:package_tag => "should fail") do
+                    @test_throws ArgumentError TestPkg.tagscheck(x)
                 end
             end
         end
