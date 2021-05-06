@@ -23,22 +23,19 @@ Names with a '.' separators will be used to form subdirectories
 (e.g., "Foo.bar.x" will be saved to "\$prefix/Foo/bar/x.jlso").
 """
 function path(handler::Handler{P}, name::String; tags...) where P
-    # deal with dynamic scope tags and checkpoint tags
-    joint_tags = intersect(keys(TAGS[]), keys(tags))
-    isempty(joint_tags) || throw(ArgumentError("Application- and package-level tags both contain $(joint_tags)."))
-    all_tags = collect(Iterators.flatten((TAGS[], tags)))
+    with_tags(tags...) do
+        # Build up a path prefix based on the tags passed in.
+        prefix = Vector{String}(undef, length(TAGS[]))
+        for (i, t) in enumerate(TAGS[])
+            prefix[i] = string(first(t), "=", last(t))
+        end
 
-    # Build up a path prefix based on the tags passed in.
-    prefix = Vector{String}(undef, length(all_tags))
-    for (i, t) in enumerate(all_tags)
-        prefix[i] = string(first(t), "=", last(t))
+        # Split up the name by '.' and add the jlso extension
+        parts = split(name, '.')
+        parts[end] = string(parts[end], ".jlso")
+
+        return join(handler.path, prefix..., parts...)
     end
-
-    # Split up the name by '.' and add the jlso extension
-    parts = split(name, '.')
-    parts[end] = string(parts[end], ".jlso")
-
-    return join(handler.path, prefix..., parts...)
 end
 
 """

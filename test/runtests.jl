@@ -40,55 +40,66 @@ Distributed.addprocs(5)
         end
     end
 
-    @testset "Application-level tags" begin
+    @testset "Context tags" begin
         mktempdir() do path
             @everywhere begin
                 path=$path
                 Checkpoints.config("TestPkg.tagscheck", path)
             end
 
-            @testset "no app-level tags" begin
+            @testset "no context tags" begin
                 TestPkg.tagscheck(x)
                 @test isfile(joinpath(path, "package_tag=1", "TestPkg", "tagscheck.jlso"))
             end
 
-            @testset "single process app-level tags" begin
-                Checkpoints.with_tags(:app_tag => "a") do
+            @testset "single context tags" begin
+                Checkpoints.with_tags(:tag => "a") do
                     TestPkg.tagscheck(x)
                 end
-                @test isfile(joinpath(path, "app_tag=a", "package_tag=1", "TestPkg", "tagscheck.jlso"))
+                @test isfile(joinpath(path, "tag=a", "package_tag=1", "TestPkg", "tagscheck.jlso"))
             end
 
-            @testset "multi-process app-level tags" begin
+            @testset "nested tags" begin
+                @testset "different tags" begin
+                    Checkpoints.with_tags(:first => "first") do
+                        Checkpoints.with_tags(:second => "second") do
+                            TestPkg.tagscheck(x) # both first and second
+                        end
+                        TestPkg.tagscheck(x) # only first
+                    end
+                    @test isfile(joinpath(path, "first=first", "second=second", "package_tag=1", "TestPkg", "tagscheck.jlso"))
+                    @test isfile(joinpath(path, "first=first", "package_tag=1", "TestPkg", "tagscheck.jlso"))
+                end
+
+                @testset "duplicate context tags" begin
+                    Checkpoints.with_tags(:same => "outer") do
+                        Checkpoints.with_tags(:same => "inner") do
+                            TestPkg.tagscheck(x)
+                        end
+                        TestPkg.tagscheck(x)
+                    end
+                    @test isfile(joinpath(path, "same=outer", "same=inner", "package_tag=1", "TestPkg", "tagscheck.jlso"))
+                    @test isfile(joinpath(path, "same=outer", "package_tag=1", "TestPkg", "tagscheck.jlso"))
+                end
+
+                @testset "same context and package tags" begin
+                    Checkpoints.with_tags(:package_tag => "context") do
+                        TestPkg.tagscheck(x)
+                    end
+                    @test isfile(joinpath(path, "package_tag=context", "package_tag=1", "TestPkg", "tagscheck.jlso"))
+                end
+            end
+
+            @testset "multi-process context tags" begin
                 @test Distributed.nworkers() > 1
-                pmap(["a", "b", "c", "d", "e", "f"]) do app_tag
-                    Checkpoints.with_tags(:app_tag => app_tag) do
+                pmap(["a", "b", "c", "d", "e", "f"]) do tag
+                    Checkpoints.with_tags(:context_tag => tag) do
                         sleep(rand()) # to make sure not overwritten in the meantime
-                        @test Checkpoints.TAGS[][:app_tag] == app_tag
+                        @test Dict(Checkpoints.TAGS[]...)[:context_tag] == tag
                         TestPkg.tagscheck(x)
                     end
                 end
-                @test isfile(joinpath(path, "app_tag=e", "package_tag=1", "TestPkg", "tagscheck.jlso"))
-            end
-
-            @testset "nested app-level tags" begin
-                Checkpoints.with_tags(:first => "first") do
-                    Checkpoints.with_tags(:second => "second") do
-                        TestPkg.tagscheck(x) # both first and second
-                    end
-                    TestPkg.tagscheck(x) # only first
-                end
-                @test isfile(joinpath(path, "first=first", "second=second", "package_tag=1", "TestPkg", "tagscheck.jlso"))
-                @test isfile(joinpath(path, "first=first", "package_tag=1", "TestPkg", "tagscheck.jlso"))
-
-                Checkpoints.with_tags(:same => "outer") do
-                    Checkpoints.with_tags(:same => "inner") do
-                        TestPkg.tagscheck(x) # make sure that inner exists
-                    end
-                    TestPkg.tagscheck(x) # and that outer tag is still used after being overwritten as inner
-                end
-                @test isfile(joinpath(path, "same=inner", "package_tag=1", "TestPkg", "tagscheck.jlso"))
-                @test isfile(joinpath(path, "same=outer", "package_tag=1", "TestPkg", "tagscheck.jlso"))
+                @test isfile(joinpath(path, "context_tag=e", "package_tag=1", "TestPkg", "tagscheck.jlso"))
             end
 
             @testset "multithreaded" begin
@@ -96,19 +107,13 @@ Distributed.addprocs(5)
                     Threads.@threads for t = 1:10
                         Checkpoints.with_tags(:thread => t) do
                             sleep(rand())
-                            @test Checkpoints.TAGS[][:thread] == t
+                            @test Dict(Checkpoints.TAGS[]...)[:thread] == t
                             TestPkg.tagscheck(x)
                         end
                     end
                     @test isfile(joinpath(path, "thread=8", "package_tag=1", "TestPkg", "tagscheck.jlso"))
                 else
                     @warn("Skipping multi-threading tests. Start with `julia -t n` for n threads.")
-                end
-            end
-
-            @testset "errors on same tags" begin
-                Checkpoints.with_tags(:package_tag => "should fail") do
-                    @test_throws ArgumentError TestPkg.tagscheck(x)
                 end
             end
         end
