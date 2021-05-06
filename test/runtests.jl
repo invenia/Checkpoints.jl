@@ -41,58 +41,60 @@ Distributed.addprocs(5)
     end
 
     @testset "Application-level tags" begin
-        @everywhere begin
-            path = "testpath" # TODO: test on mktempdir
-            Checkpoints.config("TestPkg.tagscheck", path)
-        end
-
-        @testset "no app-level tags" begin
-            TestPkg.tagscheck(x)
-            @test isfile(joinpath(path, "package_tag=1", "TestPkg", "tagscheck.jlso"))
-        end
-
-        @testset "single process app-level tags" begin
-            Checkpoints.with_tags(:app_tag => "a") do
-                TestPkg.tagscheck(x)
+        mktempdir() do path
+            @everywhere begin
+                path=$path
+                Checkpoints.config("TestPkg.tagscheck", path)
             end
-            @test isfile(joinpath(path, "app_tag=a", "package_tag=1", "TestPkg", "tagscheck.jlso"))
-        end
 
-        @testset "multi-process app-level tags" begin
-            @test Distributed.nworkers() > 1
-            pmap(["a", "b", "c", "d", "e", "f"]) do app_tag
-                Checkpoints.with_tags(:app_tag => app_tag) do
-                    sleep(rand()) # to make sure not overwritten in the meantime
-                    @test Checkpoints.TAGS[][:app_tag] == app_tag
+            @testset "no app-level tags" begin
+                TestPkg.tagscheck(x)
+                @test isfile(joinpath(path, "package_tag=1", "TestPkg", "tagscheck.jlso"))
+            end
+
+            @testset "single process app-level tags" begin
+                Checkpoints.with_tags(:app_tag => "a") do
                     TestPkg.tagscheck(x)
                 end
+                @test isfile(joinpath(path, "app_tag=a", "package_tag=1", "TestPkg", "tagscheck.jlso"))
             end
-            @test isfile(joinpath(path, "app_tag=d", "package_tag=1", "TestPkg", "tagscheck.jlso"))
-        end
 
-        @testset "nested app-level tags" begin
-            Checkpoints.with_tags(:first => "first") do
-                Checkpoints.with_tags(:second => "second") do
-                    TestPkg.tagscheck(x) # both first and second
-                end
-                TestPkg.tagscheck(x) # only first
-            end
-            @test isfile(joinpath(path, "first=first", "second=second", "package_tag=1", "TestPkg", "tagscheck.jlso"))
-            @test isfile(joinpath(path, "first=first", "package_tag=1", "TestPkg", "tagscheck.jlso"))
-        end
-
-        @testset "multithreaded" begin
-            if Threads.nthreads() > 1
-                Threads.@threads for t = 1:10
-                    Checkpoints.with_tags(:thread => t) do
-                        sleep(rand())
-                        @test Checkpoints.TAGS[][:thread] == t
+            @testset "multi-process app-level tags" begin
+                @test Distributed.nworkers() > 1
+                pmap(["a", "b", "c", "d", "e", "f"]) do app_tag
+                    Checkpoints.with_tags(:app_tag => app_tag) do
+                        sleep(rand()) # to make sure not overwritten in the meantime
+                        @test Checkpoints.TAGS[][:app_tag] == app_tag
                         TestPkg.tagscheck(x)
                     end
                 end
-                @test isfile(joinpath(path, "thread=8", "package_tag=1", "TestPkg", "tagscheck.jlso"))
-            else
-                @warn("Skipping multi-threading tests. Start with `julia -t n` for n threads.")
+                @test isfile(joinpath(path, "app_tag=e", "package_tag=1", "TestPkg", "tagscheck.jlso"))
+            end
+
+            @testset "nested app-level tags" begin
+                Checkpoints.with_tags(:first => "first") do
+                    Checkpoints.with_tags(:second => "second") do
+                        TestPkg.tagscheck(x) # both first and second
+                    end
+                    TestPkg.tagscheck(x) # only first
+                end
+                @test isfile(joinpath(path, "first=first", "second=second", "package_tag=1", "TestPkg", "tagscheck.jlso"))
+                @test isfile(joinpath(path, "first=first", "package_tag=1", "TestPkg", "tagscheck.jlso"))
+            end
+
+            @testset "multithreaded" begin
+                if Threads.nthreads() > 1
+                    Threads.@threads for t = 1:10
+                        Checkpoints.with_tags(:thread => t) do
+                            sleep(rand())
+                            @test Checkpoints.TAGS[][:thread] == t
+                            TestPkg.tagscheck(x)
+                        end
+                    end
+                    @test isfile(joinpath(path, "thread=8", "package_tag=1", "TestPkg", "tagscheck.jlso"))
+                else
+                    @warn("Skipping multi-threading tests. Start with `julia -t n` for n threads.")
+                end
             end
         end
     end
