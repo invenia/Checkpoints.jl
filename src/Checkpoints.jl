@@ -42,11 +42,12 @@ with_tags(:foo=>1, :bar=>2) do
     checkpoint("foobar"; :output=q_out)
 end
 ```
-This snippted will result in `"foobar"` checkpoint having the `foo=1` and `bar=2` tags, as will any checkpoints created by `qux`().
-The context tags are [dynamically scoped](https://en.wikipedia.org/wiki/Scope_(computer_science)#Lexical_scope_vs._dynamic_scope_2) and so are remembered through function calls.
+This snippet will result in `"foobar"` checkpoint having the `foo=1` and `bar=2` tags, as will any checkpoints created by `qux`().
+The context tags are [dynamically scoped](https://en.wikipedia.org/wiki/Scope_(computer_science)#Lexical_scope_vs._dynamic_scope_2) and so are retained through function calls.
 
 Nested contexts (nested `with_tags` calls) are allowed. Duplicate tag names and values are
 allowed, including the tags provided directly in the [`checkpoint`](@ref) call.
+Duplicate tags are repeated, not overwritten.
 """
 function with_tags(f::Function, context_tags::Pair...)
     with_context(f, CONTEXT_TAGS => (CONTEXT_TAGS[]..., context_tags...))
