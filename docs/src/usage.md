@@ -192,7 +192,7 @@ Tag contexts can be nested and can be used inside the package as well as in the 
 
 For example:
 ```julia
-with_tags(:tag=>1, :othertag=>2) do
+with_checkpoint_tags(:tag=>1, :othertag=>2) do
     bar([1., 2., 3.])
 end
 ```

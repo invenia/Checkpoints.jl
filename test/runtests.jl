@@ -48,7 +48,7 @@ Distributed.addprocs(5)
             end
 
             @testset "single context tags" begin
-                Checkpoints.with_tags(:tag => "a") do
+                with_checkpoint_tags(:tag => "a") do
                     TestPkg.bar(a)
                 end
                 @test isfile(joinpath(path, "tag=a", "date=2017-01-01", "TestPkg", "bar.jlso"))
@@ -56,8 +56,8 @@ Distributed.addprocs(5)
 
             @testset "nested tags" begin
                 @testset "different tags" begin
-                    Checkpoints.with_tags(:first => "first") do
-                        Checkpoints.with_tags(:second => "second") do
+                    with_checkpoint_tags(:first => "first") do
+                        with_checkpoint_tags(:second => "second") do
                             TestPkg.bar(a) # both first and second
                         end
                         TestPkg.bar(a) # only first
@@ -67,8 +67,8 @@ Distributed.addprocs(5)
                 end
 
                 @testset "duplicate context tags" begin
-                    Checkpoints.with_tags(:same => "outer") do
-                        Checkpoints.with_tags(:same => "inner") do
+                    with_checkpoint_tags(:same => "outer") do
+                        with_checkpoint_tags(:same => "inner") do
                             TestPkg.bar(a)
                         end
                         TestPkg.bar(a)
@@ -78,7 +78,7 @@ Distributed.addprocs(5)
                 end
 
                 @testset "same context and package tags" begin
-                    Checkpoints.with_tags(:date=>"context") do
+                    with_checkpoint_tags(:date=>"context") do
                         TestPkg.bar(a)
                     end
                     @test isfile(joinpath(path, "date=context", "date=2017-01-01", "TestPkg", "bar.jlso"))
@@ -88,7 +88,7 @@ Distributed.addprocs(5)
             @testset "multi-process context tags" begin
                 @test Distributed.nworkers() > 1
                 pmap(["a", "b", "c", "d", "e", "f"]) do tag
-                    Checkpoints.with_tags(:context_tag => tag) do
+                    with_checkpoint_tags(:context_tag => tag) do
                         sleep(rand()) # to make sure not overwritten in the meantime
                         @test Dict(Checkpoints.CONTEXT_TAGS[]...)[:context_tag] == tag
                         TestPkg.bar(a)
@@ -100,7 +100,7 @@ Distributed.addprocs(5)
             @testset "multithreaded" begin
                 if Threads.nthreads() > 1
                     Threads.@threads for t = 1:10
-                        Checkpoints.with_tags(:thread => t) do
+                        with_checkpoint_tags(:thread => t) do
                             sleep(rand())
                             @test Dict(Checkpoints.CONTEXT_TAGS[]...)[:thread] == t
                             TestPkg.bar(a)

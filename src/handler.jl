@@ -23,7 +23,7 @@ Names with a '.' separators will be used to form subdirectories
 (e.g., "Foo.bar.x" will be saved to "\$prefix/Foo/bar/x.jlso").
 """
 function path(handler::Handler{P}, name::String; tags...) where P
-    with_tags(tags...) do
+    with_checkpoint_tags(tags...) do
         # Build up a path prefix based on the tags passed in.
         prefix = ["$key=$val" for (key,val) in CONTEXT_TAGS[]]
 
