@@ -1,14 +1,17 @@
 name = "Checkpoints"
 uuid = "b4a3413d-e481-5afc-88ff-bdfbd6a50dce"
 authors = "Invenia Technical Computing Corporation"
-version = "0.3.4"
+version = "0.3.5"
 
 [deps]
 AWSS3 = "1c724243-ef5b-51ab-93f4-b0a88ac62a95"
+ContextVariablesX = "6add18c4-b38d-439d-96f6-d6bc489c04c5"
 DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
+Distributed = "8ba89e20-285c-5b6f-9357-94700520ee1b"
 FilePathsBase = "48062228-2e41-5def-b9a4-89aafe57970f"
 JLSO = "9da8a3cd-07a3-59c0-a743-3fdc52c30d11"
 Memento = "f28f55f0-a522-5efc-85c2-fe41dfb9b2d9"
+OrderedCollections = "bac558e1-5e72-5ebc-8fee-abe8a469f55d"
 
 [compat]
 AWSCore = "0.5.5, 0.6"
@@ -22,6 +25,7 @@ julia = "1"
 [extras]
 AWSCore = "4f1ea46c-232b-54a6-9b17-cc2d0f3e6598"
 AWSS3 = "1c724243-ef5b-51ab-93f4-b0a88ac62a95"
+Distributed = "8ba89e20-285c-5b6f-9357-94700520ee1b"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 

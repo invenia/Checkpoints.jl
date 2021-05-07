@@ -184,6 +184,20 @@ Dict{String,Any} with 1 entry:
   "data" => [0.166881, 0.817174, 0.413097, 0.955415, 0.139473, 0.49518, 0.416731, 0.431096, 0.126912, 0.600469]
 ```
 
+#### Tag Context
+
+It is possible to introduce a tag context, such that all the [`checkpoint`](@ref) operations inside the context are tagged with the given tags.
+The context is [dynamically scoped](https://en.wikipedia.org/wiki/Scope_(computer_science)#Lexical_scope_vs._dynamic_scope_2), meaning that the tags persist through function calls.
+Tag contexts can be nested and can be used inside the package as well as in the application.
+
+For example:
+```julia
+with_checkpoint_tags(:tag=>1, :othertag=>2) do
+    bar([1., 2., 3.])
+end
+```
+will result in recording the checkpoint at `"./checkpoints/tag=1/othertag=2/date=2017-01-01/TestPkg/bar.jlso"` _without having to pass `:tag` and `:othertag` directly to bar_.
+
 ## Sessions
 
 If you'd like to iteratively checkpoint data (e.g., in a loop) then we recommend using a session.
