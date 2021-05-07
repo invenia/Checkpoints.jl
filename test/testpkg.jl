@@ -39,10 +39,4 @@ function qux(a::Dict, b::Vector)
     end
 end
 
-function tagscheck(x)
-    for package_tag in [1, 2, 3]
-        checkpoint(MODULE, "tagscheck", :x => x; package_tag=package_tag)
-    end
-end
-
 end
