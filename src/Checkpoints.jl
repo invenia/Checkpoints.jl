@@ -77,28 +77,28 @@ commited later by `commit!(session)`.
 Explicitly calling checkpoint on a handler is generally not advised, but is an option.
 """
 function checkpoint(name::String, data::Dict{Symbol}; tags...)
-    isempty(tags) || checkpoint_deprecation()
+    checkpoint_deprecation(tags...)
     with_checkpoint_tags(tags...) do
         checkpoint(CHECKPOINTS[name], name, data)
     end
 end
 
 function checkpoint(name::String, data::Pair...; tags...)
-    isempty(tags) || checkpoint_deprecation()
+    checkpoint_deprecation(tags...)
     with_checkpoint_tags(tags...) do
         checkpoint(name, Dict(data...))
     end
 end
 
 function checkpoint(name::String, data; tags...)
-    isempty(tags) || checkpoint_deprecation()
+    checkpoint_deprecation(tags...)
     with_checkpoint_tags(tags...) do
         checkpoint(name, Dict(:data => data))
     end
 end
 
 function checkpoint(prefix::Union{Module, String}, name::String, args...; tags...)
-    isempty(tags) || checkpoint_deprecation()
+    checkpoint_deprecation(tags...)
     with_checkpoint_tags(tags...) do
         checkpoint("$prefix.$name", args...)
     end

@@ -62,7 +62,7 @@ function commit!(handler::Handler{P}, path::P, jlso::JLSO.JLSOFile) where P <: A
 end
 
 function checkpoint(handler::Handler, name::String, data::Dict{Symbol}; tags...)
-    isempty(tags) || checkpoint_deprecation()
+    checkpoint_deprecation(tags...)
     with_checkpoint_tags(tags...) do
         debug(LOGGER, "Checkpoint $name triggered, with context: $(join(CONTEXT_TAGS[], ", ")).")
         jlso = JLSO.JLSOFile(Dict{Symbol, Vector{UInt8}}(); handler.settings...)
@@ -76,7 +76,7 @@ end
 Define our no-op conditions just to be safe
 =#
 function checkpoint(handler::Nothing, name::String, data::Dict{Symbol}; tags...)
-    isempty(tags) || checkpoint_deprecation()
+    checkpoint_deprecation(tags...)
     with_checkpoint_tags(tags...) do
         debug(LOGGER, "Checkpoint $name triggered, but no handler has been set.")
         nothing

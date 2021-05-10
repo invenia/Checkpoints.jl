@@ -49,7 +49,7 @@ function commit!(session::Session)
 end
 
 function checkpoint(session::Session, data::Dict{Symbol}; tags...)
-    isempty(tags) || checkpoint_deprecation()
+    checkpoint_deprecation(tags...)
     with_checkpoint_tags(tags...) do
         # No-ops skip when handler is nothing
         session.handler === nothing && return nothing
@@ -61,14 +61,14 @@ function checkpoint(session::Session, data::Dict{Symbol}; tags...)
 end
 
 function checkpoint(s::Session, data::Pair...; tags...)
-    isempty(tags) || checkpoint_deprecation()
+    checkpoint_deprecation(tags...)
     with_checkpoint_tags(tags...) do
         checkpoint(s, Dict(data...))
     end
 end
 
 function checkpoint(s::Session, data; tags...)
-    isempty(tags) || checkpoint_deprecation()
+    checkpoint_deprecation(tags...)
     with_checkpoint_tags(tags...) do
         checkpoint(s, Dict(:data => data))
     end
