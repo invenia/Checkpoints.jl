@@ -49,14 +49,27 @@ function commit!(session::Session)
 end
 
 function checkpoint(session::Session, data::Dict{Symbol}; tags...)
-    # No-ops skip when handler is nothing
-    session.handler === nothing && return nothing
+    checkpoint_deprecation(tags...)
+    with_checkpoint_tags(tags...) do
+        # No-ops skip when handler is nothing
+        session.handler === nothing && return nothing
 
-    p = path(session.handler, session.name; tags...)
-    jlso = session.objects[p]
-    session.objects[p] = stage!(session.handler, jlso, data)
+        p = path(session.handler, session.name)
+        jlso = session.objects[p]
+        session.objects[p] = stage!(session.handler, jlso, data)
+    end
 end
 
-checkpoint(s::Session, data::Pair...; tags...) = checkpoint(s, Dict(data...); tags...)
+function checkpoint(s::Session, data::Pair...; tags...)
+    checkpoint_deprecation(tags...)
+    with_checkpoint_tags(tags...) do
+        checkpoint(s, Dict(data...))
+    end
+end
 
-checkpoint(s::Session, data; tags...) = checkpoint(s, Dict(:data => data); tags...)
+function checkpoint(s::Session, data; tags...)
+    checkpoint_deprecation(tags...)
+    with_checkpoint_tags(tags...) do
+        checkpoint(s, Dict(:data => data))
+    end
+end

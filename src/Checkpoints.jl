@@ -28,6 +28,7 @@ const CHECKPOINTS = Dict{String, Union{Nothing, Handler}}()
 @contextvar CONTEXT_TAGS::Tuple{Vararg{Pair{Symbol, Any}}} = Tuple{}()
 
 include("session.jl")
+include("deprecated.jl")
 
 """
     with_checkpoint_tags(f::Function, context_tags::Pair...)
@@ -62,29 +63,45 @@ available() = collect(keys(CHECKPOINTS))
 
 """
     checkpoint([prefix], name, data)
-    checkpoint([prefix], name, data::Pair...; tags...)
-    checkpoint([prefix], name, data::Dict; tags...)
+    checkpoint([prefix], name, data::Pair...)
+    checkpoint([prefix], name, data::Dict)
 
 Defines a data checkpoint with a specified `label` and values `data`.
 By default checkpoints are no-ops and need to be explicitly configured.
 
-    checkpoint(session, data; tags...)
-    checkpoint(handler, name, data::Dict; tags...)
+    checkpoint(session, data)
+    checkpoint(handler, name, data::Dict)
 
 Alternatively, you can also checkpoint with to a session which stages the data to be
 commited later by `commit!(session)`.
 Explicitly calling checkpoint on a handler is generally not advised, but is an option.
 """
 function checkpoint(name::String, data::Dict{Symbol}; tags...)
-    checkpoint(CHECKPOINTS[name], name, data; tags...)
+    checkpoint_deprecation(tags...)
+    with_checkpoint_tags(tags...) do
+        checkpoint(CHECKPOINTS[name], name, data)
+    end
 end
 
-checkpoint(name::String, data::Pair...; tags...) = checkpoint(name, Dict(data...); tags...)
+function checkpoint(name::String, data::Pair...; tags...)
+    checkpoint_deprecation(tags...)
+    with_checkpoint_tags(tags...) do
+        checkpoint(name, Dict(data...))
+    end
+end
 
-checkpoint(name::String, data; tags...) = checkpoint(name, Dict(:data => data); tags...)
+function checkpoint(name::String, data; tags...)
+    checkpoint_deprecation(tags...)
+    with_checkpoint_tags(tags...) do
+        checkpoint(name, Dict(:data => data))
+    end
+end
 
-function checkpoint(prefix::Union{Module, String}, name::String, args...; kwargs...)
-    checkpoint("$prefix.$name", args...; kwargs...)
+function checkpoint(prefix::Union{Module, String}, name::String, args...; tags...)
+    checkpoint_deprecation(tags...)
+    with_checkpoint_tags(tags...) do
+        checkpoint("$prefix.$name", args...)
+    end
 end
 
 """

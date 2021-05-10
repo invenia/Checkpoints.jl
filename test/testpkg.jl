@@ -1,11 +1,11 @@
 module TestPkg
 
-using Checkpoints: register, checkpoint, Session
+using Checkpoints: register, checkpoint, with_checkpoint_tags, Session
 
 # We aren't using `@__MODULE__` because that would return TestPkg on 0.6 and Main.TestPkg on 0.7
 const MODULE = "TestPkg"
 
-__init__() = register(MODULE, ["foo", "bar", "baz", "qux_a", "qux_b"])
+__init__() = register(MODULE, ["foo", "bar", "baz", "qux_a", "qux_b", "deprecated"])
 
 function foo(x::Matrix, y::Matrix)
     # Save multiple variables to 1 foo.jlso file by passing in pairs of variables
@@ -15,8 +15,10 @@ end
 
 function bar(a::Vector)
     # Save a single value for bar.jlso. The object name in that file defaults to :data.
-    checkpoint(MODULE, "bar", a; date="2017-01-01")
-    return a * a'
+    with_checkpoint_tags(:date=>"2017-01-01") do
+        checkpoint(MODULE, "bar", a)
+        return a * a'
+    end
 end
 
 function baz(data::Dict)
@@ -37,6 +39,10 @@ function qux(a::Dict, b::Vector)
 
         checkpoint(sb, b)
     end
+end
+
+function deprecated_checkpoint_syntax()
+    checkpoint(MODULE, "deprecated", [1, 2, 3]; date="2017-01-01")
 end
 
 end

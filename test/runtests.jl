@@ -40,6 +40,14 @@ Distributed.addprocs(5)
         end
     end
 
+    @testset "deprecated tags syntax" begin
+        mktempdir() do path
+            Checkpoints.config("TestPkg.deprecated", path)
+            TestPkg.deprecated_checkpoint_syntax()
+            @test isfile(joinpath(path, "date=2017-01-01", "TestPkg", "deprecated.jlso"))
+        end
+    end
+
     @testset "Context tags" begin
         mktempdir() do path
             @everywhere begin
