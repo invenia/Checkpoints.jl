@@ -15,24 +15,21 @@ Handler(path::String; kwargs...) = Handler(Path(path), kwargs)
 Handler(bucket::String, prefix::String; kwargs...) = Handler(S3Path("s3://$bucket/$prefix"), kwargs)
 
 """
-    path(handler, name; tags...)
+    path(handler, name)
 
-Determines the path to save to based on the handlers path prefix, name and tags.
+Determines the path to save to based on the handlers path prefix, name, and context.
 Tags are used to dynamically prefix the named file with the handler's path.
 Names with a '.' separators will be used to form subdirectories
 (e.g., "Foo.bar.x" will be saved to "\$prefix/Foo/bar/x.jlso").
 """
-function path(handler::Handler{P}, name::String; tags...) where P
-    with_checkpoint_tags(tags...) do
-        # Build up a path prefix based on the tags passed in.
-        prefix = ["$key=$val" for (key,val) in CONTEXT_TAGS[]]
+function path(handler::Handler{P}, name::String) where P
+    prefix = ["$key=$val" for (key,val) in CONTEXT_TAGS[]]
 
-        # Split up the name by '.' and add the jlso extension
-        parts = split(name, '.')
-        parts[end] = string(parts[end], ".jlso")
+    # Split up the name by '.' and add the jlso extension
+    parts = split(name, '.')
+    parts[end] = string(parts[end], ".jlso")
 
-        return join(handler.path, prefix..., parts...)
-    end
+    return join(handler.path, prefix..., parts...)
 end
 
 """
@@ -65,17 +62,23 @@ function commit!(handler::Handler{P}, path::P, jlso::JLSO.JLSOFile) where P <: A
 end
 
 function checkpoint(handler::Handler, name::String, data::Dict{Symbol}; tags...)
-    debug(LOGGER, "Checkpoint $name triggered, with tags: $(join(tags, ", ")).")
-    jlso = JLSO.JLSOFile(Dict{Symbol, Vector{UInt8}}(); handler.settings...)
-    p = path(handler, name; tags...)
-    stage!(handler, jlso, data)
-    commit!(handler, p, jlso)
+    isempty(tags) || checkpoint_deprecation()
+    with_checkpoint_tags(tags...) do
+        debug(LOGGER, "Checkpoint $name triggered, with context: $(join(CONTEXT_TAGS[], ", ")).")
+        jlso = JLSO.JLSOFile(Dict{Symbol, Vector{UInt8}}(); handler.settings...)
+        p = path(handler, name)
+        stage!(handler, jlso, data)
+        commit!(handler, p, jlso)
+    end
 end
 
 #=
 Define our no-op conditions just to be safe
 =#
 function checkpoint(handler::Nothing, name::String, data::Dict{Symbol}; tags...)
-    debug(LOGGER, "Checkpoint $name triggered, but no handler has been set.")
-    nothing
+    isempty(tags) || checkpoint_deprecation()
+    with_checkpoint_tags(tags...) do
+        debug(LOGGER, "Checkpoint $name triggered, but no handler has been set.")
+        nothing
+    end
 end
