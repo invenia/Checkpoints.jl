@@ -8,7 +8,6 @@ makedocs(
     ),
     pages=[
         "Home" => "index.md",
-        "Usage" => "usage.md",
         "API" => "api.md",
     ],
     repo="https://github.com/invenia/Checkpoints.jl/blob/{commit}{path}#L{line}",
