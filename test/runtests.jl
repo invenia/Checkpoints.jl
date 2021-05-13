@@ -5,6 +5,7 @@ using AWSCore
 using FilePathsBase
 using JLSO
 using Random
+using Tables: istable
 
 using AWSCore: AWSConfig
 using AWSS3: S3Path, s3_put, s3_list_buckets, s3_create_bucket
@@ -121,6 +122,8 @@ Distributed.addprocs(5)
             end
         end
     end
+
+    include("indexing.jl")
 
     if get(ENV, "LIVE", "false") == "true"
         @testset "S3 handler" begin

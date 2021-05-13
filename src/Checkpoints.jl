@@ -8,6 +8,7 @@ the ability to configure how those checkpoints save data externally
 module Checkpoints
 
 using AWSS3
+using Compat # for contains (julia v1.5)
 using ContextVariablesX
 using DataStructures: DefaultDict
 using FilePathsBase
@@ -28,6 +29,7 @@ const CHECKPOINTS = Dict{String, Union{Nothing, Handler}}()
 @contextvar CONTEXT_TAGS::Tuple{Vararg{Pair{Symbol, Any}}} = Tuple{}()
 
 include("session.jl")
+include("indexing.jl")
 include("deprecated.jl")
 
 """
