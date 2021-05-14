@@ -62,6 +62,14 @@ Distributed.addprocs(5)
                 @test isfile(joinpath(path, "tag=a", "date=2017-01-01", "TestPkg", "bar.jlso"))
             end
 
+            @testset "NamedTuple tags" begin
+                tags = (tag1="some", tag2="thing")
+                with_checkpoint_tags(tags) do
+                    TestPkg.bar(a)
+                end
+                @test isfile(joinpath(path, "tag1=some", "tag2=thing", "date=2017-01-01", "TestPkg", "bar.jlso"))
+            end
+
             @testset "nested tags" begin
                 @testset "different tags" begin
                     with_checkpoint_tags(:first => "first") do

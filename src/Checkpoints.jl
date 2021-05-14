@@ -32,6 +32,7 @@ include("deprecated.jl")
 
 """
     with_checkpoint_tags(f::Function, context_tags::Pair...)
+    with_checkpoint_tags(f::Function, context_tags::NamedTuple)
 
 Runs the function `f`, tagging any [`checkpoint`](@ref)s created by `f` with the `context_tags`.
 This is normally used via the do-block form:
@@ -53,6 +54,7 @@ Duplicate tags are repeated, not overwritten.
 function with_checkpoint_tags(f::Function, context_tags::Pair...)
     with_context(f, CONTEXT_TAGS => (CONTEXT_TAGS[]..., context_tags...))
 end
+with_checkpoint_tags(f::Function, context_tags::NamedTuple) = with_checkpoint_tags(f, pairs(context_tags)...)
 
 """
     available() -> Vector{String}
