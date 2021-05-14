@@ -46,3 +46,22 @@ which results in recorded checkpoints at
 ./path/to/checkpoints/iteration=1/foo1=1/foo2=2/MyPackage/foo.jlso
 ./path/to/checkpoints/iteration=2/foo1=1/foo2=2/MyPackage/foo.jlso
 ```
+
+You can use `index_checkpoint_files` to get an index of the files, which is a [Tables.jl](https://github.com/JuliaData/Tables.jl) table and so can e.g. be passed to `DataFrame`:
+```julia
+julia> using DataFrames
+
+julia> DataFrame(index_checkpoint_files("./path/to/checkpoints/"))
+2×6 DataFrame
+ Row │ prefixes        checkpoint_name  iteration   foo1        foo2        checkpoint_path
+     │ Tuple…          SubString…       SubString…  SubString…  SubString…  PosixPath…
+─────┼────────────────────────────────────────────────────────────────────────────────────────────────────────
+   1 │ ("MyPackage",)  foo              1           1           2           ./path/to/checkpoints/iteration=…
+   2 │ ("MyPackage",)  foo              2           1           2           ./path/to/checkpoints/iteration=…
+```
+or worked with directly:
+```julia
+julia> [checkpoint_path(out) for out in index_checkpoint_files("./path/to/checkpoints/") if out.iteration=="1"]
+1-element Array{FilePathsBase.PosixPath,1}:
+ p"./path/to/checkpoints/iteration=1/foo1=1/foo2=2/MyPackage/foo.jlso"
+```
