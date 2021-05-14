@@ -1,4 +1,5 @@
 using Checkpoints
+using Compat # for only
 using Distributed
 using Test
 using AWSCore
