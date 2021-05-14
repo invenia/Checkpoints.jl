@@ -5,7 +5,7 @@ using AWSCore
 using FilePathsBase
 using JLSO
 using Random
-using Tables: istable
+using Tables: Tables
 
 using AWSCore: AWSConfig
 using AWSS3: S3Path, s3_put, s3_list_buckets, s3_create_bucket

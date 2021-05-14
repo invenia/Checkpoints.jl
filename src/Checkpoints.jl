@@ -17,7 +17,10 @@ using JLSO
 using Memento
 using OrderedCollections
 
-export checkpoint, with_checkpoint_tags
+export checkpoint, with_checkpoint_tags  # creating stuff
+# indexing stuff
+export IndexEntry, index_checkpoint_files
+export checkpoint_name, checkpoint_path, prefixes, tags
 
 const LOGGER = getlogger(@__MODULE__)
 
