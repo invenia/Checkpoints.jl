@@ -53,6 +53,7 @@ Duplicate tags are repeated, not overwritten.
 function with_checkpoint_tags(f::Function, context_tags::Pair...)
     with_context(f, CONTEXT_TAGS => (CONTEXT_TAGS[]..., context_tags...))
 end
+with_checkpoint_tags(f::Function, context_tags::NamedTuple) = with_checkpoint_tags(f, pairs(context_tags)...)
 
 """
     available() -> Vector{String}
