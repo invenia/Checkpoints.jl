@@ -18,7 +18,9 @@ MODULE = "MyPackage"
 __init__() = Checkpoints.register(MODULE, ["foo", ])
 
 function foo(x)
-    checkpoint(MODULE, "foo", :data => 2x)
+    with_checkpoint_tags(:foo1 => 1, :foo2 => 2) do
+        checkpoint(MODULE, "foo", :data => 2x)
+    end
     return 2x
 end
 
@@ -41,6 +43,6 @@ end
 
 which results in recorded checkpoints at
 ```
-./path/to/checkpoints/iteration=1/MyPackage/foo.jlso
-./path/to/checkpoints/iteration=2/MyPackage/foo.jlso
+./path/to/checkpoints/iteration=1/foo1=1/foo2=2/MyPackage/foo.jlso
+./path/to/checkpoints/iteration=2/foo1=1/foo2=2/MyPackage/foo.jlso
 ```
