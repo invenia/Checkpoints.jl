@@ -10,8 +10,8 @@ For accessing details of the IndexEntry the following helpers are provided:
 Further: `getproperty` is overloaded so that you can access the value of the tag `:foo` via
 `x.foo`.
 """
-struct IndexEntry{P<:AbstractPath}
-    checkpoint_path::P
+struct IndexEntry
+    checkpoint_path::AbstractPath
     checkpoint_name::AbstractString
     prefixes::NTuple{<:Any, AbstractString}
     tags::NTuple{<:Any, Pair{Symbol, <:AbstractString}}
