@@ -1,5 +1,5 @@
 # Checkpoints
-[![latest](https://img.shields.io/badge/docs-latest-blue.svg)](https://invenia.github.io/Checkpoints.jl/latest)
+[![stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://invenia.github.io/Checkpoints.jl/stable)
 [![build status](https://github.com/invenia/Checkpoints.jl/workflows/CI/badge.svg)](https://github.com/invenia/Checkpoints.jl/actions)
 [![coverage](https://codecov.io/gh/invenia/Checkpoints.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/invenia/Checkpoints.jl)
 
@@ -24,9 +24,11 @@ julia> module TestPkg
 
        function bar(a::Vector)
            # Save a single value for bar.jlso. The object name in that file defaults to "date".
-           # Any kwargs passed to checkpoint will be appended to the handler path passed to config.
+           # Any context tags will be appended to the handler path passed to config.
            # In this case the path would be `<prefix>/date=2017-01-01/TestPkg/bar.jlso`
-           checkpoint(MODULE, "bar", a; date="2017-01-01")
+           with_checkpoint_tags(:date => "2017-01-01") do
+               checkpoint(MODULE, "bar", a)
+           end
            return a * a'
        end
 
@@ -155,9 +157,11 @@ As a reference, here is the sample code for `TestPkg.bar` that we'll be calling.
 ...
 function bar(a::Vector)
     # Save a single value for bar.jlso. The object name in that file defaults to "date".
-    # Any kwargs passed to checkpoint will be appended to the handler path passed to config.
+    # Any context tags will be appended to the handler path passed to config.
     # In this case the path would be `<prefix>/date=2017-01-01/TestPkg/bar.jlso`
-    checkpoint(MODULE, "bar", a; date="2017-01-01")
+    with_checkpoint_tags(:date => "2017-01-01") do
+        checkpoint(MODULE, "bar", a)
+    end
     return a * a'
 end
 ...
