@@ -47,7 +47,7 @@ which results in recorded checkpoints at
 ./path/to/checkpoints/iteration=2/foo1=1/foo2=2/MyPackage/foo.jlso
 ```
 
-You can use `index_checkpoint_files` to get an index of the files, which is a [Tables.jl](https://github.com/JuliaData/Tables.jl) table and so can e.g. be passed to `DataFrame`:
+You can use `index_checkpoint_files` to get an index of the files, which is a [Tables.jl](https://github.com/JuliaData/Tables.jl) table and so can e.g. be passed to `DataFrame` (and then you can do things like `groupby` etc):
 ```julia
 julia> using DataFrames
 
