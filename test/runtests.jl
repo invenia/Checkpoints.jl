@@ -17,6 +17,20 @@ Distributed.addprocs(5)
 @testset "Checkpoints" begin
     @everywhere include("testpkg.jl")
 
+    @testset "enabled" begin
+        mktempdir() do path
+            @test enabled_checkpoints() == []
+            Checkpoints.register(["c1", "c2", "c3"])
+            @test enabled_checkpoints() == []
+
+            Checkpoints.config("c1", path)
+            @test enabled_checkpoints() == ["c1"]
+
+            Checkpoints.config("c2", path)
+            @test enabled_checkpoints() == ["c1", "c2"]
+        end
+    end
+
     x = reshape(collect(1:100), 10, 10)
     y = reshape(collect(101:200), 10, 10)
     a = collect(1:10)
