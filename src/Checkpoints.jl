@@ -69,6 +69,22 @@ Returns a vector of all available (registered) checkpoints.
 available() = collect(keys(CHECKPOINTS))
 
 """
+    enabled() -> Vector{String}
+
+Returns a vector of all enabled ([`config`](@ref)ured) checkpoints.
+"""
+enabled() = filter(is_enabled, available())
+
+"""
+    is_enabled(name) -> Bool
+    is_enabled(names...) -> Bool
+
+Returns `true` if the checkpoint `name`(s) are [`config`](@ref)ured.
+"""
+is_enabled(name) = haskey(CHECKPOINTS, name) && CHECKPOINTS[name] !== nothing
+is_enabled(names...) = all(is_enabled.(names))
+
+"""
     checkpoint([prefix], name, data)
     checkpoint([prefix], name, data::Pair...)
     checkpoint([prefix], name, data::Dict)
