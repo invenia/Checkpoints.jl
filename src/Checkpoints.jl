@@ -18,7 +18,7 @@ using Memento
 using OrderedCollections
 
 export checkpoint, with_checkpoint_tags  # creating stuff
-export enabled
+export enabled_checkpoints
 # indexing stuff
 export IndexEntry, index_checkpoint_files
 export checkpoint_name, checkpoint_path, prefixes, tags
@@ -70,13 +70,11 @@ Returns a vector of all available (registered) checkpoints.
 available() = collect(keys(CHECKPOINTS))
 
 """
-    enabled() -> Vector{String}
+    enabled_checkpoints() -> Vector{String}
 
 Returns a vector of all enabled ([`config`](@ref)ured) checkpoints.
 """
-enabled() = filter(_isenabled, available())
-
-_isenabled(name) = CHECKPOINTS[name] !== nothing
+enabled_checkpoints() = filter(k -> CHECKPOINTS[k] !== nothing, available())
 
 """
     checkpoint([prefix], name, data)

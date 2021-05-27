@@ -19,15 +19,15 @@ Distributed.addprocs(5)
 
     @testset "enabled" begin
         mktempdir() do path
-            @test Checkpoints.enabled() == []
-            Checkpoints.register(["c1", "c2"])
-            @test Checkpoints.enabled() == []
+            @test enabled_checkpoints() == []
+            Checkpoints.register(["c1", "c2", "c3"])
+            @test enabled_checkpoints() == []
 
             Checkpoints.config("c1", path)
-            @test Checkpoints.enabled() == ["c1"]
+            @test enabled_checkpoints() == ["c1"]
 
             Checkpoints.config("c2", path)
-            @test Checkpoints.enabled() == ["c1", "c2"]
+            @test enabled_checkpoints() == ["c1", "c2"]
         end
     end
 
