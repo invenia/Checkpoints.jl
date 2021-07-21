@@ -122,7 +122,7 @@ end
 """
     index_checkpoint_files(dir)
 
-Constructs a index for all the files output by checkpoints located within  `dir`.
+Constructs a index for all the files located within  `dir`.
 This index tells you their checkpoint_name, checkpoint_path, tags, etc.
 See [`IndexEntry`](@ref) for full information on what is recorded.
 
@@ -139,7 +139,7 @@ You can also work with it directly, say you wanted to get all checkpoints files 
 2: https://github.com/JuliaData/DataFrames.jl
 """
 function index_checkpoint_files(dir::AbstractPath)
-    map(Iterators.filter(==("jlso") ∘ extension, walkpath(dir))) do checkpoint_path
+    map(Iterators.filter(isfile, walkpath(dir))) do checkpoint_path
         return IndexEntry(checkpoint_path)
     end
 end
