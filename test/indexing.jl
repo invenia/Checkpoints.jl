@@ -26,7 +26,7 @@
             other_file = joinpath(path, "date=2021-01-01", "one")
             mkpath(dirname(other_file))
             write(other_file, 1)
-            @show index = index_checkpoint_files(path)
+            @show index = index_files(path)
             @test length(index) == 2
             @test other_file == only(checkpoint_path(entry) for entry in index if entry.date == "2021-01-01")
         end
