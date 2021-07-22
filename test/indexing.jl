@@ -19,6 +19,19 @@
         end
     end
 
+    @testset "files not saved by Checkpoints.jl" begin
+        mktempdir(SystemPath) do path
+            Checkpoints.config("TestPkg.bar", path)
+            TestPkg.bar([1,2,3])
+            other_file = joinpath(path, "date=2021-01-01", "other_file.txt")
+            mkpath(dirname(other_file))
+            write(other_file, 1)
+            index = index_files(path)
+            @test length(index) == 2
+            @test other_file == only(checkpoint_path(entry) for entry in index if entry.date == "2021-01-01")
+        end
+    end
+
     @testset "clashing tags" begin
         mktempdir() do path
             Checkpoints.config("TestPkg.bar", path)

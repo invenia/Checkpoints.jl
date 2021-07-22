@@ -145,3 +145,17 @@ function index_checkpoint_files(dir::AbstractPath)
 end
 
 index_checkpoint_files(dir) = index_checkpoint_files(Path(dir))
+
+"""
+    index_files(dir)
+
+Constructs a index for all the files located within  `dir`.
+Same as [`index_checkpoint_files`] except not restricted to files created by Checkpoints.jl.
+"""
+function index_files(dir::AbstractPath)
+    map(Iterators.filter(isfile, walkpath(dir))) do path
+        return IndexEntry(path)
+    end
+end
+
+index_files(dir) = index_files(Path(dir))
