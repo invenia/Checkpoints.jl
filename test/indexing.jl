@@ -23,7 +23,7 @@
         mktempdir(SystemPath) do path
             Checkpoints.config("TestPkg.bar", path)
             TestPkg.bar([1,2,3])
-            other_file = joinpath(path, "date=2021-01-01", "one")
+            other_file = joinpath(path, "date=2021-01-01", "other_file.txt")
             mkpath(dirname(other_file))
             write(other_file, 1)
             index = index_files(path)
