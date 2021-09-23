@@ -1,15 +1,15 @@
+using AWS
 using Checkpoints
 using Compat # for only
 using Distributed
-using Test
-using AWSCore
 using FilePathsBase
 using JLSO
 using Random
-using Tables: Tables
+using Test
 
-using AWSCore: AWSConfig
+using AWS: AWSConfig
 using AWSS3: S3Path, s3_put, s3_list_buckets, s3_create_bucket
+using Tables: Tables
 
 Distributed.addprocs(5)
 @everywhere using Checkpoints
@@ -150,8 +150,8 @@ Distributed.addprocs(5)
 
     if get(ENV, "LIVE", "false") == "true"
         @testset "S3 handler" begin
-            config = AWSCore.aws_config()
-            prefix = "Checkpoints.jl/"
+            config = global_aws_config()
+            prefix = "Checkpoints.jl"
             bucket = get(
                 ENV,
                 "TestBucketAndPrefix",
@@ -159,13 +159,14 @@ Distributed.addprocs(5)
             )
             bucket in s3_list_buckets(config) || s3_create_bucket(config, bucket)
 
-            mkdir(Path("s3://$bucket/$prefix"); recursive=true, exist_ok=true)
+            bucket_path = Path("s3://$bucket/$prefix/")
+            mkdir(bucket_path; recursive=true, exist_ok=true)
 
-            mktmpdir(Path("s3://$bucket/Checkpoints.jl/")) do fp
+            mktmpdir(bucket_path) do fp
                 Checkpoints.config("TestPkg.bar", fp)
 
                 TestPkg.bar(a)
-                expected_path = fp / "date=2017-01-01" / "TestPkg/bar.jlso"
+                expected_path = joinpath(fp, "date=2017-01-01", "TestPkg/bar.jlso")
                 @test JLSO.load(IOBuffer(read(expected_path)))[:data] == a
             end
         end
