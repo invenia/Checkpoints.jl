@@ -18,7 +18,7 @@ struct IndexEntry
 end
 
 IndexEntry(file) = IndexEntry(Path(file))
-function IndexEntry(filepath::AbstractPath, check_exists=false)
+function IndexEntry(filepath::AbstractPath)
     # skip any non-tag directories at the start. Note this will be tricked if those have "="
     # in them but probably not worth handling, unless an issue comes up
     first_tag_ind = something(findfirst(contains("="), filepath.segments), 1)
