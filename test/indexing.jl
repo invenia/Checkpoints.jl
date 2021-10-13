@@ -53,4 +53,8 @@
             @test_throws ErrorException entry.tags
         end
     end
+
+    @testset "nonexistent dir" begin
+        @test_throws ArgumentError index_checkpoint_files("nonexistent_dir")
+    end
 end

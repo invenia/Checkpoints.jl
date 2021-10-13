@@ -138,7 +138,7 @@ You can also work with it directly, say you wanted to get all checkpoints files 
 2: https://github.com/JuliaData/DataFrames.jl
 """
 function index_checkpoint_files(dir::AbstractPath)
-    isdir(dir) || throw(ArgumentError(dir, "Need an existing directory."))
+    isdir(dir) || throw(ArgumentError("Need an existing directory."))
     map(Iterators.filter(==("jlso") ∘ extension, walkpath(dir))) do checkpoint_path
         return IndexEntry(checkpoint_path)
     end
