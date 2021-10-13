@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Home · Checkpoints.jl</title><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="assets/documenter.js"></script><script src="siteinfo.js"></script><script src="../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-dark.css" data-theme-name="documenter-dark"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="assets/themeswap.js"></script><link href="assets/invenia.css" rel="stylesheet" type="text/css"/></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit">Checkpoints.jl</span></div><form class="docs-search" action="search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li class="is-active"><a class="tocitem" href>Home</a><ul class="internal"><li><a class="tocitem" href="#Basic-Checkpointing"><span>Basic Checkpointing</span></a></li><li><a class="tocitem" href="#Tags"><span>Tags</span></a></li><li><a class="tocitem" href="#Sessions"><span>Sessions</span></a></li><li><a class="tocitem" href="#Load-Failures"><span>Load Failures</span></a></li></ul></li><li><a class="tocitem" href="api/">API</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Home</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Home</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/invenia/Checkpoints.jl/blob/master/docs/src/index.md#L" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Checkpoints"><a class="docs-heading-anchor" href="#Checkpoints">Checkpoints</a><a id="Checkpoints-1"></a><a class="docs-heading-anchor-permalink" href="#Checkpoints" title="Permalink"></a></h1><p><a href="https://invenia.github.io/Checkpoints.jl/stable"><img src="https://img.shields.io/badge/docs-stable-blue.svg" alt="stable"/></a> <a href="https://github.com/invenia/Checkpoints.jl/actions"><img src="https://github.com/invenia/Checkpoints.jl/workflows/CI/badge.svg" alt="build status"/></a> <a href="https://codecov.io/gh/invenia/Checkpoints.jl"><img src="https://codecov.io/gh/invenia/Checkpoints.jl/branch/main/graph/badge.svg" alt="coverage"/></a></p><p>Let&#39;s begin by creating a module (or package) that contains data we may want to save (or checkpoint).</p><pre><code class="language-julia">julia&gt; module TestPkg
+
+       using Checkpoints: register, checkpoint, Session
+
+       # We aren&#39;t using `@__MODULE__` because that would return TestPkg on 0.6 and Main.TestPkg on 0.7
+       const MODULE = &quot;TestPkg&quot;
+
+       __init__() = register(MODULE, [&quot;foo&quot;, &quot;bar&quot;, &quot;baz&quot;])
+
+       function foo(x::Matrix, y::Matrix)
+           # Save multiple variables to 1 foo.jlso file by passing in pairs of variables
+           checkpoint(MODULE, &quot;foo&quot;, :x =&gt; x, :y =&gt; y)
+           return x * y
+       end
+
+       function bar(a::Vector)
+           # Save a single value for bar.jlso. The object name in that file defaults to &quot;date&quot;.
+           # Any context tags will be appended to the handler path passed to config.
+           # In this case the path would be `&lt;prefix&gt;/date=2017-01-01/TestPkg/bar.jlso`
+           with_checkpoint_tags(:date =&gt; &quot;2017-01-01&quot;) do
+               checkpoint(MODULE, &quot;bar&quot;, a)
+           end
+           return a * a&#39;
+       end
+
+       function baz(data::Dict)
+            # Check that saving multiple values to a Session works.
+            Session(MODULE, &quot;baz&quot;) do s
+                for (k, v) in data
+                    checkpoint(s, k =&gt; v)
+                end
+            end
+        end
+    end
+
+TestPkg</code></pre><h2 id="Basic-Checkpointing"><a class="docs-heading-anchor" href="#Basic-Checkpointing">Basic Checkpointing</a><a id="Basic-Checkpointing-1"></a><a class="docs-heading-anchor-permalink" href="#Basic-Checkpointing" title="Permalink"></a></h2><p>Now we get a list of all available checkpoints outside our module.</p><pre><code class="language-julia">julia&gt; using Checkpoints
+
+julia&gt; Checkpoints.available()
+2-element Array{String,1}:
+ &quot;TestPkg.bar&quot;
+ &quot;TestPkg.foo&quot;
+ &quot;TestPkg.baz&quot;</code></pre><p>Let&#39;s start by looking at <code>TestPkg.foo</code></p><h4 id="Package"><a class="docs-heading-anchor" href="#Package">Package</a><a id="Package-1"></a><a class="docs-heading-anchor-permalink" href="#Package" title="Permalink"></a></h4><p>As a reference, here is the sample code for <code>TestPkg.foo</code> that we&#39;ll be calling.</p><pre><code class="language-julia">...
+function foo(x::Matrix, y::Matrix)
+    # Save multiple variables to 1 foo.jlso file by passing in pairs of variables
+    checkpoint(MODULE, &quot;foo&quot;, :x =&gt; x, :y =&gt; y)
+    return x * y
+end
+...</code></pre><h4 id="Application"><a class="docs-heading-anchor" href="#Application">Application</a><a id="Application-1"></a><a class="docs-heading-anchor-permalink" href="#Application" title="Permalink"></a></h4><p>We can run our function <code>TestPkg.foo</code> normally without saving any data.</p><pre><code class="language-julia">julia&gt; TestPkg.foo(rand(5, 5), rand(5, 5))
+5×5 Array{Float64,2}:
+ 0.968095  1.18687  1.55126  0.393847  0.854391
+ 0.839788  1.1527   1.36785  0.361546  0.818136
+ 1.44853   1.5996   2.17535  0.567696  1.31739
+ 1.08267   1.74522  2.28862  0.673888  1.35935
+ 0.755876  1.62275  2.24326  0.727734  1.13352</code></pre><p>Now we just need to assign a backend handler for our checkpoints. In our case, all checkpoints with the prefix <code>&quot;TestPkg.foo&quot;</code>.</p><pre><code class="language-julia">julia&gt; Checkpoints.config(&quot;TestPkg.foo&quot;, &quot;./checkpoints&quot;)</code></pre><p>To confirm that our checkpoints work let&#39;s assign our expected <code>x</code> and `y values to local variables.</p><pre><code class="language-julia">julia&gt; x = rand(5, 5)
+5×5 Array{Float64,2}:
+ 0.605955  0.314332  0.666603   0.997074  0.106063
+ 0.691509  0.438608  0.121533   0.931504  0.127145
+ 0.704745  0.640941  0.237085   0.333055  0.648672
+ 0.911475  0.410938  0.0143505  0.257862  0.0238969
+ 0.956029  0.593267  0.0334345  0.374615  0.0301007
+
+julia&gt; y = rand(5, 5)
+5×5 Array{Float64,2}:
+ 0.245635  0.211488  0.122208   0.917927  0.736712
+ 0.556079  0.837774  0.0845954  0.812386  0.478323
+ 0.661403  0.307322  0.015631   0.150063  0.765874
+ 0.949725  0.332881  0.667242   0.468574  0.223302
+ 0.723806  0.682948  0.511228   0.635479  0.879735</code></pre><p>Finally, rerun <code>TestPkg.foo</code> and inspect the generated file</p><pre><code class="language-julia">julia&gt; TestPkg.foo(x, y)
+5×5 Array{Float64,2}:
+ 1.78824   1.0007    0.830574  1.44622  1.42326
+ 1.47084   0.947963  0.81005   1.52659  1.13218
+ 1.47216   1.31275   0.697899  1.77145  1.65238
+ 0.724089  0.643606  0.33065   1.30867  0.95765
+ 0.964419  0.854747  0.432891  1.55921  1.12383
+
+julia&gt; isfile(&quot;checkpoints/TestPkg/foo.jlso&quot;)
+true
+
+julia&gt; using JLSO
+
+julia&gt; d = JLSO.load(&quot;checkpoints/TestPkg/foo.jlso&quot;)
+Dict{String,Any} with 2 entries:
+  &quot;x&quot; =&gt; [0.605955 0.314332 … 0.997074 0.106063; 0.691509 0.438608 … 0.931504 0.127145; … ; 0.911475 0.410938 … 0.257862 0.0238969; 0.956029…
+  &quot;y&quot; =&gt; [0.245635 0.211488 … 0.917927 0.736712; 0.556079 0.837774 … 0.812386 0.478323; … ; 0.949725 0.332881 … 0.468574 0.223302; 0.723806 …
+
+julia&gt; d[&quot;x&quot;]
+5×5 Array{Float64,2}:
+ 0.605955  0.314332  0.666603   0.997074  0.106063
+ 0.691509  0.438608  0.121533   0.931504  0.127145
+ 0.704745  0.640941  0.237085   0.333055  0.648672
+ 0.911475  0.410938  0.0143505  0.257862  0.0238969
+ 0.956029  0.593267  0.0334345  0.374615  0.0301007
+</code></pre><p>As we can see, the value of <code>x</code> was successfully saved to <code>checkpoints/MyPkg/foo.jlso</code>.</p><h2 id="Tags"><a class="docs-heading-anchor" href="#Tags">Tags</a><a id="Tags-1"></a><a class="docs-heading-anchor-permalink" href="#Tags" title="Permalink"></a></h2><p>Tags can be used to append the handler path at runtime.</p><h4 id="Package-2"><a class="docs-heading-anchor" href="#Package-2">Package</a><a class="docs-heading-anchor-permalink" href="#Package-2" title="Permalink"></a></h4><p>As a reference, here is the sample code for <code>TestPkg.bar</code> that we&#39;ll be calling.</p><pre><code class="language-julia">...
+function bar(a::Vector)
+    # Save a single value for bar.jlso. The object name in that file defaults to &quot;date&quot;.
+    # Any context tags will be appended to the handler path passed to config.
+    # In this case the path would be `&lt;prefix&gt;/date=2017-01-01/TestPkg/bar.jlso`
+    with_checkpoint_tags(:date =&gt; &quot;2017-01-01&quot;) do
+        checkpoint(MODULE, &quot;bar&quot;, a)
+    end
+    return a * a&#39;
+end
+...</code></pre><h4 id="Application-2"><a class="docs-heading-anchor" href="#Application-2">Application</a><a class="docs-heading-anchor-permalink" href="#Application-2" title="Permalink"></a></h4><pre><code class="language-julia">
+julia&gt; a = rand(10)
+10-element Array{Float64,1}:
+ 0.166881
+ 0.817174
+ 0.413097
+ 0.955415
+ 0.139473
+ 0.49518
+ 0.416731
+ 0.431096
+ 0.126912
+ 0.600469
+
+julia&gt; Checkpoints.config(&quot;TestPkg.bar&quot;, &quot;./checkpoints&quot;)
+
+julia&gt; JLSO.load(&quot;./checkpoints/date=2017-01-01/TestPkg/bar.jlso&quot;)
+Dict{String,Any} with 1 entry:
+  &quot;data&quot; =&gt; [0.166881, 0.817174, 0.413097, 0.955415, 0.139473, 0.49518, 0.416731, 0.431096, 0.126912, 0.600469]</code></pre><h4 id="Tag-Context"><a class="docs-heading-anchor" href="#Tag-Context">Tag Context</a><a id="Tag-Context-1"></a><a class="docs-heading-anchor-permalink" href="#Tag-Context" title="Permalink"></a></h4><p>It is possible to introduce a tag context, such that all the <a href="api/#Checkpoints.checkpoint-Tuple{String, Dict{Symbol, V} where V}"><code>checkpoint</code></a> operations inside the context are tagged with the given tags. The context is <a href="https://en.wikipedia.org/wiki/Scope_(computer_science)#Lexical_scope_vs._dynamic_scope_2">dynamically scoped</a>, meaning that the tags persist through function calls. Tag contexts can be nested and can be used inside the package as well as in the application.</p><p>For example:</p><pre><code class="language-julia">with_checkpoint_tags(:tag=&gt;1, :othertag=&gt;2) do
+    bar([1., 2., 3.])
+end</code></pre><p>will result in recording the checkpoint at <code>&quot;./checkpoints/tag=1/othertag=2/date=2017-01-01/TestPkg/bar.jlso&quot;</code> <em>without having to pass <code>:tag</code> and <code>:othertag</code> directly to bar</em>.</p><h2 id="Sessions"><a class="docs-heading-anchor" href="#Sessions">Sessions</a><a id="Sessions-1"></a><a class="docs-heading-anchor-permalink" href="#Sessions" title="Permalink"></a></h2><p>If you&#39;d like to iteratively checkpoint data (e.g., in a loop) then we recommend using a session.</p><h4 id="Package-3"><a class="docs-heading-anchor" href="#Package-3">Package</a><a class="docs-heading-anchor-permalink" href="#Package-3" title="Permalink"></a></h4><p>As a reference, here is the sample code for <code>TestPkg.baz</code> that we&#39;ll be calling.</p><pre><code class="language-julia">...
+function baz(data::Dict)
+    # Check that saving multiple values to a Session works.
+    Session(MODULE, &quot;baz&quot;) do s
+        for (k, v) in data
+            checkpoint(s, k =&gt; v)
+        end
+    end
+end
+...</code></pre><h4 id="Application-3"><a class="docs-heading-anchor" href="#Application-3">Application</a><a class="docs-heading-anchor-permalink" href="#Application-3" title="Permalink"></a></h4><pre><code class="language-julia">julia&gt; d = Dict(:x =&gt; rand(10), :y =&gt; rand(10))
+Dict{String,Array{Float64,1}} with 2 entries:
+  :x =&gt; [0.517666, 0.976474, 0.961658, 0.0933946, 0.877478, 0.428836, 0.0623459, 0.548001, 0.437111, 0.0783503]
+  :y =&gt; [0.0623591, 0.0441436, 0.28578, 0.289995, 0.999642, 0.26299, 0.965148, 0.899285, 0.292166, 0.595886]
+
+julia&gt; TestPkg.baz(d)
+
+julia&gt; JLSO.load(&quot;./checkpoints/TestPkg/baz.jlso&quot;)
+Dict{String,Any} with 2 entries:
+  &quot;x&quot; =&gt; [0.517666, 0.976474, 0.961658, 0.0933946, 0.877478, 0.428836, 0.0623459, 0.548001, 0.437111, 0.0783503]
+  &quot;y&quot; =&gt; [0.0623591, 0.0441436, 0.28578, 0.289995, 0.999642, 0.26299, 0.965148, 0.899285, 0.292166, 0.595886]</code></pre><h2 id="Load-Failures"><a class="docs-heading-anchor" href="#Load-Failures">Load Failures</a><a id="Load-Failures-1"></a><a class="docs-heading-anchor-permalink" href="#Load-Failures" title="Permalink"></a></h2><p>What if I can&#39;t <code>load</code> my .jlso files?</p><p>If you&#39;re julia environment doesn&#39;t match the one used to save .jlso file (e.g., different julia version or missing packages) then you may get errors.</p><pre><code class="language-julia">julia&gt; using Checkpoints, JLSO
+[ Info: Recompiling stale cache file /Users/rory/.playground/share/checkpoints/depot/compiled/v1.0/Checkpoints/E2USV.ji for Checkpoints [08085054-0ffc-5852-afcc-fc6ba29efde0]
+
+julia&gt; d = JLSO.load(&quot;checkpoints/TestPkg/foo.jlso&quot;)
+[warn | JLSO]: EOFError: read end of file
+[warn | JLSO]: EOFError: read end of file
+Dict{String,Any} with 2 entries:
+  &quot;x&quot; =&gt; UInt8[0x15, 0x00, 0x0e, 0x14, 0x02, 0xca, 0xca, 0x32, 0x20, 0x7b  …  0x98, 0x3f, 0xc6, 0xc9, 0x58, 0xc8, 0xb7, 0xd2, 0x9e, 0x3f]
+  &quot;y&quot; =&gt; UInt8[0x15, 0x00, 0x0e, 0x14, 0x02, 0xca, 0xca, 0xfe, 0x60, 0xe0  …  0xcc, 0x3f, 0x9f, 0xb0, 0xc4, 0x03, 0xca, 0x26, 0xec, 0x3f]</code></pre><p>In this case, we should try manually loading the <code>JLSO.JLSOFile</code> and inspect the metadata saved with the file.</p><pre><code class="language-julia">julia&gt; jlso = open(&quot;checkpoints/TestPkg/foo.jlso&quot;) do io
+           read(io, JLSO.JLSOFile)
+       end
+JLSOFile([x, y]; version=v&quot;1.0.0&quot;, julia=v&quot;0.6.4&quot;, format=:serialize, image=&quot;&quot;)
+
+julia&gt; VERSION
+v&quot;1.0.0&quot;</code></pre><p>As we can see, our .jlso file was saved in julia v0.6.4 and we&#39;re trying to load in on julia v1.0. If you still have difficulty loading the file when the julia versions match then you may want to inspect the package versions installed when saving the file.</p><pre><code class="language-julia">julia&gt; jlso.pkgs
+Dict{String,VersionNumber} with 60 entries:
+  &quot;Coverage&quot;            =&gt; v&quot;0.6.0&quot;
+  &quot;HTTP&quot;                =&gt; v&quot;0.6.15&quot;
+  &quot;LegacyStrings&quot;       =&gt; v&quot;0.4.0&quot;
+  &quot;Nullables&quot;           =&gt; v&quot;0.0.8&quot;
+  &quot;AxisArrays&quot;          =&gt; v&quot;0.2.1&quot;
+  &quot;Compat&quot;              =&gt; v&quot;1.2.0&quot;
+  &quot;DataStructures&quot;      =&gt; v&quot;0.8.4&quot;
+  &quot;CategoricalArrays&quot;   =&gt; v&quot;0.3.14&quot;
+  &quot;Calculus&quot;            =&gt; v&quot;0.4.1&quot;
+  &quot;DeepDiffs&quot;           =&gt; v&quot;1.1.0&quot;
+  &quot;StatsFuns&quot;           =&gt; v&quot;0.6.1&quot;
+  &quot;JLD2&quot;                =&gt; v&quot;0.0.6&quot;
+  &quot;DataFrames&quot;          =&gt; v&quot;0.11.7&quot;
+  &quot;SpecialFunctions&quot;    =&gt; v&quot;0.6.0&quot;
+  &quot;TranscodingStreams&quot;  =&gt; v&quot;0.5.4&quot;
+  &quot;Blosc&quot;               =&gt; v&quot;0.5.1&quot;
+  &quot;Distributions&quot;       =&gt; v&quot;0.15.0&quot;
+  &quot;SHA&quot;                 =&gt; v&quot;0.5.7&quot;
+  &quot;Missings&quot;            =&gt; v&quot;0.2.10&quot;
+  &quot;SymDict&quot;             =&gt; v&quot;0.2.1&quot;
+  &quot;CodecZlib&quot;           =&gt; v&quot;0.4.4&quot;
+  &quot;HDF5&quot;                =&gt; v&quot;0.9.5&quot;
+  &quot;AWSCore&quot;             =&gt; v&quot;0.3.9&quot;
+  &quot;Retry&quot;               =&gt; v&quot;0.2.0&quot;
+  &quot;MbedTLS&quot;             =&gt; v&quot;0.5.13&quot;
+  &quot;FileIO&quot;              =&gt; v&quot;0.9.1&quot;
+  &quot;Mocking&quot;             =&gt; v&quot;0.5.7&quot;
+  &quot;TimeZones&quot;           =&gt; v&quot;0.8.0&quot;
+  &quot;BSON&quot;                =&gt; v&quot;0.1.4&quot;
+  &quot;PDMats&quot;              =&gt; v&quot;0.8.0&quot;
+  &quot;BenchmarkTools&quot;      =&gt; v&quot;0.3.2&quot;
+  &quot;SortingAlgorithms&quot;   =&gt; v&quot;0.2.1&quot;
+  &quot;WeakRefStrings&quot;      =&gt; v&quot;0.4.7&quot;
+  &quot;Memento&quot;             =&gt; v&quot;0.10.0&quot;
+  &quot;Syslogs&quot;             =&gt; v&quot;0.2.0&quot;
+  &quot;JSON&quot;                =&gt; v&quot;0.17.2&quot;
+  &quot;StatsBase&quot;           =&gt; v&quot;0.23.1&quot;
+  &quot;DocStringExtensions&quot; =&gt; v&quot;0.4.6&quot;
+  &quot;Checkpoints&quot;         =&gt; v&quot;0.0.0-&quot;
+  &quot;QuadGK&quot;              =&gt; v&quot;0.3.0&quot;
+  &quot;BinDeps&quot;             =&gt; v&quot;0.8.10&quot;
+  &quot;RangeArrays&quot;         =&gt; v&quot;0.3.1&quot;
+  &quot;Parameters&quot;          =&gt; v&quot;0.9.2&quot;
+  &quot;Reexport&quot;            =&gt; v&quot;0.1.0&quot;
+  &quot;CMakeWrapper&quot;        =&gt; v&quot;0.1.0&quot;
+  &quot;URIParser&quot;           =&gt; v&quot;0.3.1&quot;
+  &quot;XMLDict&quot;             =&gt; v&quot;0.1.3&quot;
+  &quot;Documenter&quot;          =&gt; v&quot;0.19.6&quot;
+  &quot;IntervalSets&quot;        =&gt; v&quot;0.3.0&quot;
+  &quot;DataStreams&quot;         =&gt; v&quot;0.3.6&quot;
+  &quot;JLD&quot;                 =&gt; v&quot;0.8.3&quot;
+  &quot;Rmath&quot;               =&gt; v&quot;0.4.0&quot;
+  &quot;BinaryProvider&quot;      =&gt; v&quot;0.3.3&quot;
+  &quot;IterTools&quot;           =&gt; v&quot;0.2.1&quot;
+  &quot;IniFile&quot;             =&gt; v&quot;0.4.0&quot;
+  &quot;AWSSDK&quot;              =&gt; v&quot;0.3.1&quot;
+  &quot;NamedTuples&quot;         =&gt; v&quot;4.0.2&quot;
+  &quot;AWSS3&quot;               =&gt; v&quot;0.3.7&quot;
+  &quot;Homebrew&quot;            =&gt; v&quot;0.6.4&quot;
+  &quot;LightXML&quot;            =&gt; v&quot;0.7.0&quot;</code></pre></article><nav class="docs-footer"><a class="docs-footer-nextpage" href="api/">API »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Wednesday 13 October 2021 17:01">Wednesday 13 October 2021</span>. Using Julia version 1.6.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
