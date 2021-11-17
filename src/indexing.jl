@@ -63,6 +63,19 @@ specified (as in `checkpoint("forecasts",...)`). If it was saved as
 """
 prefixes(x::IndexEntry) = getfield(x, :prefixes)
 
+
+"""
+    checkpoint_fullname(x::IndexEntry)
+
+The fullname of the checkpoint output file, including [`prefixes`](@ref), and 
+[`checkpoint_name`](@ref).
+If the checkpoint was saved used `checkpoint(Forecasters, "forecasts", ...)` then
+`checkpoint_fullname` will return `"Forecasters.forecasts"`.
+If the checkpoint was saved using `checkpoint("Foo.Bar", "forecasts.jlso")` then
+`checkpoint_fullname` will return `"Foo.Bar.forecasts"`.
+"""
+checkpoint_fullname(x::IndexEntry) = join((prefixes(x)..., checkpoint_name(x)), ".")
+
 """
     tags(x::IndexEntry)
 
