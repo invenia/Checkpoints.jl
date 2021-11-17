@@ -12,6 +12,7 @@
             @test entry.date == "2017-01-01"
             @test prefixes(entry) == ("TestPkg",)
             @test checkpoint_name(entry) == "bar"
+            @test checkpoint_fullname(entry) == "TestPkg.bar"
             @test ==(
                 checkpoint_path(entry),
                 Path(joinpath(path, "date=2017-01-01", "TestPkg", "bar.jlso"))

@@ -21,7 +21,7 @@ export checkpoint, with_checkpoint_tags  # creating stuff
 export enabled_checkpoints
 # indexing stuff
 export IndexEntry, index_checkpoint_files, index_files
-export checkpoint_name, checkpoint_path, prefixes, tags
+export checkpoint_fullname, checkpoint_name, checkpoint_path, prefixes, tags
 
 const LOGGER = getlogger(@__MODULE__)
 
