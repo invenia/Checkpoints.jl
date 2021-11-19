@@ -1,9 +1,16 @@
 """
-    IndexEntry(checkpoint_path, [checkpoint_name, prefixes, tags])
+    IndexEntry(checkpoint_path, base_dir)
+    IndexEntry(checkpoint_path, checkpoint_name, prefixes, tags)
 
 This is an index entry describing the output file from a checkpoint.
 You can retrieve a list of these from a folder full of such outputs, using
-[`index_checkpoint_files`](@ref).
+[`index_checkpoint_files`](@ref), this is the normal way that `IndexEntry`'s are created.
+
+Internally, it is constructed either directly, specifying all of the `checkpoint_path`,
+`checkpoint_name`, `prefixes`, and `tags`.
+Or (more usually) by passing in the `checkpoint_path` and the `base_dir` that that path is
+relative to; then all the `checkpoint_name`, `prefixes` and `tags` can be extracted from the
+path.
 
 For accessing details of the IndexEntry the following helpers are provided:
 [`checkpoint_path`](@ref), [`checkpoint_name`](@ref), [`prefixes`](@ref), [`tags`](@ref).
@@ -17,12 +24,8 @@ struct IndexEntry
     tags::NTuple{<:Any, Pair{Symbol, <:AbstractString}}
 end
 
-IndexEntry(file) = IndexEntry(Path(file))
-function IndexEntry(filepath::AbstractPath)
-    # skip any non-tag directories at the start. Note this will be tricked if those have "="
-    # in them but probably not worth handling, unless an issue comes up
-    first_tag_ind = something(findfirst(contains("="), filepath.segments), 1)
-    segments = filepath.segments[first_tag_ind:end-1]
+function IndexEntry(filepath::AbstractPath, base_dir)
+    segments = relpath(dirname(filepath), base_dir).segments
 
     prefixes = filter(!contains("="), segments)
     tags = map(filter(contains("="), segments)) do seg
@@ -153,7 +156,7 @@ You can also work with it directly, say you wanted to get all checkpoints files 
 function index_checkpoint_files(dir::AbstractPath)
     isdir(dir) || throw(ArgumentError("Need an existing directory."))
     map(Iterators.filter(==("jlso") ∘ extension, walkpath(dir))) do checkpoint_path
-        return IndexEntry(checkpoint_path)
+        return IndexEntry(checkpoint_path, dir)
     end
 end
 
@@ -167,7 +170,7 @@ Same as [`index_checkpoint_files`] except not restricted to files created by Che
 """
 function index_files(dir::AbstractPath)
     map(Iterators.filter(isfile, walkpath(dir))) do path
-        return IndexEntry(path)
+        return IndexEntry(path, dir)
     end
 end
 

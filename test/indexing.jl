@@ -20,6 +20,23 @@
         end
     end
 
+    @testset "Searching within a nontrivial directory" begin
+        # https://github.com/invenia/Checkpoints.jl/issues/39
+        mktempdir(SystemPath) do outer_path
+            # This path is tricky, it is more than 1 folder deep
+            # and it has `=` in bits that are not tags
+            path = mkdir(joinpath(outer_path,"a","b=1","c"); recursive=true)
+            Checkpoints.config("TestPkg.bar", path)
+            TestPkg.bar([1,2,3])
+
+            index = index_checkpoint_files(path)
+            entry = only(index)
+            @test tags(entry) == (:date=>"2017-01-01",)
+            @test prefixes(entry) == ("TestPkg",)
+            @test checkpoint_name(entry) == "bar"
+        end
+    end
+
     @testset "files not saved by Checkpoints.jl" begin
         mktempdir(SystemPath) do path
             Checkpoints.config("TestPkg.bar", path)
