@@ -24,7 +24,6 @@ struct IndexEntry
     tags::NTuple{<:Any, Pair{Symbol, <:AbstractString}}
 end
 
-IndexEntry(file, base_dir) = IndexEntry(Path(file), Path(base_dir))
 function IndexEntry(filepath::AbstractPath, base_dir)
     segments = relpath(dirname(filepath), base_dir).segments
 
