@@ -25,7 +25,7 @@
         mktempdir() do outer_path
             # This path is tricky, it is more than 1 folder deep
             # and it has `=` in bits that are not tags
-            path = mkdir(joinpath(outer_path,"a","b=1","c"); recursive=true)
+            path = mkdir(joinpath(Path(outer_path),"a","b=1","c"); recursive=true)
             Checkpoints.config("TestPkg.bar", path)
             TestPkg.bar([1,2,3])
 
