@@ -72,6 +72,18 @@
         end
     end
 
+    @testset "no module, no tags" begin
+        Checkpoints.register(["bar"])
+        mktempdir() do path
+            Checkpoints.config("bar", path)
+            checkpoint("bar", 1)
+            index = index_checkpoint_files(path)
+            entry = only(index)
+            @test isempty(tags(entry))
+            @test isempty(prefixes(entry))
+        end
+    end
+
     @testset "nonexistent dir" begin
         @test_throws ArgumentError index_checkpoint_files("nonexistent_dir")
     end
