@@ -25,12 +25,19 @@ struct IndexEntry
 end
 
 function IndexEntry(filepath::AbstractPath, base_dir)
-    segments = relpath(dirname(filepath), base_dir).segments
+    if dirname(filepath) == base_dir
+        # workaround for relpath erroring on equal S3Paths
+        # https://github.com/rofinn/FilePathsBase.jl/issues/156
+        prefixes = ()
+        tags = ()
+    else
+        segments = relpath(dirname(filepath), base_dir).segments
 
-    prefixes = filter(!contains("="), segments)
-    tags = map(filter(contains("="), segments)) do seg
-        tag, val = split(seg, "="; limit=2)
-        return Symbol(tag)=>val
+        prefixes = filter(!contains("="), segments)
+        tags = map(filter(contains("="), segments)) do seg
+            tag, val = split(seg, "="; limit=2)
+            return Symbol(tag)=>val
+        end
     end
     checkpoint_name = filename(filepath)
     return IndexEntry(filepath, checkpoint_name, prefixes, tags)
@@ -70,7 +77,7 @@ prefixes(x::IndexEntry) = getfield(x, :prefixes)
 """
     checkpoint_fullname(x::IndexEntry)
 
-The full name of the checkpoint output file, including [`prefixes`](@ref), and 
+The full name of the checkpoint output file, including [`prefixes`](@ref), and
 [`checkpoint_name`](@ref).
 If the checkpoint was saved using `checkpoint(Forecasters, "forecasts", ...)` then
 `checkpoint_fullname` will return `"Forecasters.forecasts"`.
