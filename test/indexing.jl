@@ -37,6 +37,26 @@
         end
     end
 
+    @testset "Searching for deprecated checkpoint" begin
+        mktempdir(SystemPath) do path
+            @test_deprecated Checkpoints.config("TestPkg.quuz", path)
+            a = Dict(zip(
+                map(x -> Symbol(randstring(4)), 1:10),
+                map(x -> rand(10), 1:10)
+            ))
+            b = rand(10)
+            TestPkg.qux(a, b)
+
+            index = index_checkpoint_files(path)
+            entry= only(index)
+            @test checkpoint_name(entry) == "qux_b"
+            @test checkpoint_fullname(entry) == "TestPkg.qux_b"
+            @test Checkpoints.deprecated_names(entry) == ("TestPkg.quuz",)
+            res = @test_deprecated Checkpoints.search("TestPkg.quuz", index)
+            @test res == index
+        end
+    end
+
     @testset "files not saved by Checkpoints.jl" begin
         mktempdir(SystemPath) do path
             Checkpoints.config("TestPkg.bar", path)
