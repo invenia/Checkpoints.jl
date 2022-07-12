@@ -140,15 +140,7 @@ If the first argument is not a `Handler` then all `args` and `kwargs` are passed
 """
 function config(handler::Handler, names::Vector{String})
     for n in names
-        haskey(CHECKPOINTS, n) || warn(LOGGER, "$n is not a registered checkpoint")
-
-        # Warn about deprecated checkpoints
-        if CHECKPOINTS[n] isa String
-            Base.depwarn("$n has been deprecated to $(CHECKPOINTS[n])", :config)
-            _config(handler, CHECKPOINTS[n])
-        else
-            _config(handler, n)
-        end
+        _config(handler, n)
     end
 end
 
@@ -167,8 +159,16 @@ end
 # To avoid collisions with `prefix` method above, which should probably use
 # a regex / glob syntax
 function _config(handler, name::String)
-    debug(LOGGER, "Checkpoint $name set to use $(handler)")
-    CHECKPOINTS[name] = handler
+    haskey(CHECKPOINTS, name) || warn(LOGGER, "$name is not a registered checkpoint")
+
+    # Warn about deprecated checkpoints and recurse if necessary
+    if CHECKPOINTS[name] isa String
+        Base.depwarn("$name has been deprecated to $(CHECKPOINTS[name])", :config)
+        return _config(handler, CHECKPOINTS[name])
+    else
+        debug(LOGGER, "Checkpoint $name set to use $(handler)")
+        return setindex!(CHECKPOINTS, handler, name)
+    end
 end
 
 """
