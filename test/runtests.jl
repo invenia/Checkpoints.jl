@@ -42,9 +42,7 @@ Distributed.addprocs(5)
                 "TestPkg.quuz" => "TestPkg.qux_b",
             )
 
-            @show Checkpoints.CHECKPOINTS
             @test_deprecated Checkpoints.config("TestPkg.quux", path)
-            @show Checkpoints.CHECKPOINTS
             @test enabled_checkpoints() == ["TestPkg.qux_a"]
 
             # Manually disable the checkpoint again
