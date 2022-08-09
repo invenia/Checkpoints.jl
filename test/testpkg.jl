@@ -1,11 +1,15 @@
 module TestPkg
 
-using Checkpoints: register, checkpoint, with_checkpoint_tags, Session
+using Checkpoints: deprecate, register, checkpoint, with_checkpoint_tags, Session
 
 # We aren't using `@__MODULE__` because that would return TestPkg on 0.6 and Main.TestPkg on 0.7
 const MODULE = "TestPkg"
 
-__init__() = register(MODULE, ["foo", "bar", "baz", "qux_a", "qux_b", "deprecated"])
+function __init__()
+    register(MODULE, ["foo", "bar", "baz", "qux_a", "qux_b", "deprecated"])
+    deprecate(MODULE, "quux", "qux_a")
+    deprecate(MODULE, "quuz", "qux_b")
+end
 
 function foo(x::Matrix, y::Matrix)
     # Save multiple variables to 1 foo.jlso file by passing in pairs of variables

@@ -18,7 +18,7 @@ using Memento
 using OrderedCollections
 
 export checkpoint, with_checkpoint_tags  # creating stuff
-export enabled_checkpoints
+export enabled_checkpoints, deprecated_checkpoints
 # indexing stuff
 export IndexEntry, index_checkpoint_files, index_files
 export checkpoint_fullname, checkpoint_name, checkpoint_path, prefixes, tags
@@ -29,7 +29,7 @@ __init__() = Memento.register(LOGGER)
 
 include("handler.jl")
 
-const CHECKPOINTS = Dict{String, Union{Nothing, Handler}}()
+const CHECKPOINTS = Dict{String, Union{Nothing, String, Handler}}()
 @contextvar CONTEXT_TAGS::Tuple{Vararg{Pair{Symbol, Any}}} = Tuple{}()
 
 include("session.jl")
@@ -72,9 +72,19 @@ available() = collect(keys(CHECKPOINTS))
 """
     enabled_checkpoints() -> Vector{String}
 
-Returns a vector of all enabled ([`config`](@ref)ured) checkpoints.
+Returns a vector of all enabled ([`config`](@ref)ured) and not [`deprecate`](@ref)d checkpoints.
+Use [`deprecated_checkpoints`](@ref) to retrieve a mapping of old / deprecated checkpoints.
 """
-enabled_checkpoints() = filter(k -> CHECKPOINTS[k] !== nothing, available())
+enabled_checkpoints() = filter(k -> CHECKPOINTS[k] isa Handler, available())
+
+"""
+    deprecated_checkpoints() -> Dict{String, String}
+
+Returns a Dict mapping deprecated checkpoints to the corresponding new names.
+"""
+function deprecated_checkpoints()
+    return Dict{String, String}(filter(p -> last(p) isa String, CHECKPOINTS))
+end
 
 """
     checkpoint([prefix], name, data)
@@ -131,9 +141,7 @@ If the first argument is not a `Handler` then all `args` and `kwargs` are passed
 """
 function config(handler::Handler, names::Vector{String})
     for n in names
-        haskey(CHECKPOINTS, n) || warn(LOGGER, "$n is not a registered checkpoint")
-        debug(LOGGER, "Checkpoint $n set to use $(handler)")
-        CHECKPOINTS[n] = handler
+        _config(handler, n)
     end
 end
 
@@ -149,6 +157,20 @@ function config(prefix::Union{Module, String}, args...; kwargs...)
     config(Handler(args...; kwargs...), prefix)
 end
 
+# To avoid collisions with `prefix` method above, which should probably use
+# a regex / glob syntax
+function _config(handler, name::String)
+    haskey(CHECKPOINTS, name) || warn(LOGGER, "$name is not a registered checkpoint")
+
+    # Warn about deprecated checkpoints and recurse if necessary
+    if CHECKPOINTS[name] isa String
+        Base.depwarn("$name has been deprecated to $(CHECKPOINTS[name])", :config)
+        return _config(handler, CHECKPOINTS[name])
+    else
+        debug(LOGGER, "Checkpoint $name set to use $(handler)")
+        return setindex!(CHECKPOINTS, handler, name)
+    end
+end
 
 """
     register([prefix], labels)
@@ -169,6 +191,20 @@ end
 
 function register(prefix::Union{Module, String}, labels::Vector{String})
     register(map(l -> join([prefix, l], "."), labels))
+end
+
+
+"""
+    deprecate([prefix], prev, curr)
+
+Deprecate a checkpoint that has been renamed.
+"""
+function deprecate end
+
+deprecate(prev, curr) = setindex!(CHECKPOINTS, curr, prev)
+
+function deprecate(prefix::Union{Module, String}, prev, curr)
+    deprecate(join([prefix, prev], "."), join([prefix, curr], "."))
 end
 
 end  # module

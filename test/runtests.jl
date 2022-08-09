@@ -28,6 +28,25 @@ Distributed.addprocs(5)
 
             Checkpoints.config("c2", path)
             @test enabled_checkpoints() == ["c1", "c2"]
+
+            # Manually disable the checkpoint again
+            Checkpoints.CHECKPOINTS["c1"] = nothing
+            Checkpoints.CHECKPOINTS["c2"] = nothing
+        end
+    end
+
+    @testset "deprecated" begin
+        mktempdir() do path
+            @test deprecated_checkpoints() == Dict(
+                "TestPkg.quux" => "TestPkg.qux_a",
+                "TestPkg.quuz" => "TestPkg.qux_b",
+            )
+
+            @test_deprecated Checkpoints.config("TestPkg.quux", path)
+            @test enabled_checkpoints() == ["TestPkg.qux_a"]
+
+            # Manually disable the checkpoint again
+            Checkpoints.CHECKPOINTS["TestPkg.qux_a"] = nothing
         end
     end
 
