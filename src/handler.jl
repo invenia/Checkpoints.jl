@@ -1,4 +1,4 @@
-struct Handler{P<:AbstractPath}
+struct Handler{P}
     path::P
     settings        # Could be Vector or Pairs on 0.6 or 1.0 respectively
 end
@@ -10,7 +10,7 @@ end
 Handles iteratively saving JLSO file to the specified path location.
 FilePath are used to abstract away differences between paths on S3 or locally.
 """
-Handler(path::AbstractPath; kwargs...) = Handler(path, kwargs)
+Handler(path; kwargs...) = Handler(path, kwargs)
 Handler(path::String; kwargs...) = Handler(Path(path), kwargs)
 Handler(bucket::String, prefix::String; kwargs...) = Handler(S3Path("s3://$bucket/$prefix"), kwargs)
 
@@ -22,7 +22,7 @@ Tags are used to dynamically prefix the named file with the handler's path.
 Names with a '.' separators will be used to form subdirectories
 (e.g., "Foo.bar.x" will be saved to "\$prefix/Foo/bar/x.jlso").
 """
-function path(handler::Handler{P}, name::String) where P
+function path(handler::Handler{<:AbstractPath}, name::String)
     prefix = ["$key=$val" for (key,val) in CONTEXT_TAGS[]]
 
     # Split up the name by '.' and add the jlso extension
@@ -61,7 +61,7 @@ function commit!(handler::Handler{P}, path::P, jlso::JLSO.JLSOFile) where P <: A
     write(path, bytes)
 end
 
-function checkpoint(handler::Handler, name::String, data::Dict{Symbol}; tags...)
+function checkpoint(handler::Handler{<:AbstractPath}, name::String, data::Dict{Symbol}; tags...)
     checkpoint_deprecation(tags...)
     with_checkpoint_tags(tags...) do
         debug(LOGGER, "Checkpoint $name triggered, with context: $(join(CONTEXT_TAGS[], ", ")).")
@@ -69,6 +69,32 @@ function checkpoint(handler::Handler, name::String, data::Dict{Symbol}; tags...)
         p = path(handler, name)
         stage!(handler, jlso, data)
         commit!(handler, p, jlso)
+    end
+end
+
+
+# Could also return a Dict here to make funcion signatures consistent?
+function path(handler::Handler{<:Dict}, name::String)
+    prefix = ["$key=$val" for (key, val) in CONTEXT_TAGS[]]
+    parts = split(name, '.')  # Split up the name by '.'
+    return vcat(prefix, parts)
+end
+
+function commit!(handler::Handler{<:Dict}, path, data::Dict{Symbol})
+    # Create the nested Dict structure for each entry in the path
+    node = handler.path
+    for p in path
+        node = get!(node, p, p == last(path) ? data : Dict{String,Dict}())
+    end
+    return nothing
+end
+
+function checkpoint(handler::Handler, name::String, data::Dict{Symbol}; tags...)
+    checkpoint_deprecation(tags...)
+    with_checkpoint_tags(tags...) do
+        debug(LOGGER, "Checkpoint $name triggered, with context: $(join(CONTEXT_TAGS[], ", ")).")
+        p = path(handler, name)
+        commit!(handler, p, data)
     end
 end
 
