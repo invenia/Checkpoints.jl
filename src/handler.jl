@@ -106,16 +106,26 @@ the checkpoint tags and name.
 """
 struct DictHandler <: AbstractHandler
     objects::Dict{String, Dict}
-    DictHandler() = new(Dict{String, Dict}())
+    force::Bool
 end
 
-commit!(handler::DictHandler, k::AbstractString, data) = setindex!(handler.objects, data, k)
+DictHandler(; objects=Dict{String, Dict}(), force=false) = DictHandler(objects, force)
+
+function commit!(handler::DictHandler, k::AbstractString, data)
+    if handler.force
+        return setindex!(handler.objects, data, k)
+    else
+        res = get!(handler.objects, k, data)
+        isequal(res, data) || throw(ArgumentError("$k has already been stored"))
+        return res
+    end
+end
 
 function checkpoint(handler::DictHandler, name::String, data::Dict{Symbol}; tags...)
     # TODO: Remove duplicate wrapper code
     checkpoint_deprecation(tags...)
     with_checkpoint_tags(tags...) do
         debug(LOGGER, "Checkpoint $name triggered, with context: $(join(CONTEXT_TAGS[], ", ")).")
-        handler.objects[getkey(handler, name)] = data
+        commit!(handler, getkey(handler, name), data)
     end
 end

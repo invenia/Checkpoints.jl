@@ -291,6 +291,16 @@ Distributed.addprocs(5)
 
             @test haskey(objects, "TestPkg/qux_b")
             @test objects["TestPkg/qux_b"][:data] == b
+
+            # Test that rerunning a function and overwriting a checkpoint fails by default
+            @test_throws ArgumentError TestPkg.foo(x, rand(10, 10))
+
+            # Retry after setting `force=true`
+            handler = DictHandler(; objects=objects, force=true)
+            Checkpoints.config(handler, "TestPkg")
+            TestPkg.foo(x, rand(10, 10))
+            @test objects["TestPkg/foo"][:x] == x
+            @test objects["TestPkg/foo"][:y] != y
         end
     end
 end
