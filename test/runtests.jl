@@ -10,6 +10,7 @@ using Test
 using AWS: AWSConfig
 using AWSS3: S3Path, s3_put, s3_list_buckets, s3_create_bucket
 using Tables: Tables
+using Checkpoints: JLSOHandler, DictHandler
 
 Distributed.addprocs(5)
 @everywhere using Checkpoints
@@ -255,6 +256,51 @@ Distributed.addprocs(5)
                 data = JLSO.load(qux_b_path)
                 @test data[:data] == b
             end
+        end
+
+        # We're largely reusing the same code for different handlers, but make sure
+        # that saving to a dict also works.
+        @testset "DictHandler" begin
+            a = Dict(zip(
+                map(x -> Symbol(randstring(4)), 1:10),
+                map(x -> rand(10), 1:10)
+            ))
+            b = rand(10)
+            handler = DictHandler()
+            objects = handler.objects
+            Checkpoints.config(handler, "TestPkg")
+
+            @test isempty(handler.objects)
+            TestPkg.foo(x, y)
+            @test haskey(objects, "TestPkg/foo")
+            @test issetequal(keys(objects["TestPkg/foo"]), [:x, :y])
+            @test objects["TestPkg/foo"][:x] == x
+            @test objects["TestPkg/foo"][:y] == y
+
+            TestPkg.bar(b)
+            @test haskey(objects, "date=2017-01-01/TestPkg/bar")
+            @test objects["date=2017-01-01/TestPkg/bar"][:data] == b
+
+            TestPkg.baz(a)
+            @test haskey(objects, "TestPkg/baz")
+            @test objects["TestPkg/baz"] == a
+
+            TestPkg.qux(a, b)
+            @test haskey(objects, "TestPkg/qux_a")
+            @test objects["TestPkg/qux_a"] == a
+
+            @test haskey(objects, "TestPkg/qux_b")
+            @test objects["TestPkg/qux_b"][:data] == b
+
+            # Test that rerunning a function and overwriting a checkpoint fails by default
+            @test_throws ArgumentError TestPkg.foo(x, rand(10, 10))
+
+            # Retry after setting `force=true`
+            handler = DictHandler(; objects=objects, force=true)
+            Checkpoints.config(handler, "TestPkg")
+            TestPkg.foo(x, rand(10, 10))
+            @test objects["TestPkg/foo"][:x] == x
+            @test objects["TestPkg/foo"][:y] != y
         end
     end
 end

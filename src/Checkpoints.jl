@@ -29,7 +29,7 @@ __init__() = Memento.register(LOGGER)
 
 include("handler.jl")
 
-const CHECKPOINTS = Dict{String, Union{Nothing, String, Handler}}()
+const CHECKPOINTS = Dict{String, Union{Nothing, String, AbstractHandler}}()
 @contextvar CONTEXT_TAGS::Tuple{Vararg{Pair{Symbol, Any}}} = Tuple{}()
 
 include("session.jl")
@@ -75,7 +75,7 @@ available() = collect(keys(CHECKPOINTS))
 Returns a vector of all enabled ([`config`](@ref)ured) and not [`deprecate`](@ref)d checkpoints.
 Use [`deprecated_checkpoints`](@ref) to retrieve a mapping of old / deprecated checkpoints.
 """
-enabled_checkpoints() = filter(k -> CHECKPOINTS[k] isa Handler, available())
+enabled_checkpoints() = filter(k -> CHECKPOINTS[k] isa AbstractHandler, available())
 
 """
     deprecated_checkpoints() -> Dict{String, String}
@@ -130,31 +130,31 @@ function checkpoint(prefix::Union{Module, String}, name::String, args...; tags..
 end
 
 """
-    config(handler::Handler, labels::Vector{String})
-    config(handler::Handler, prefix::String)
+    config(handler::AbstractHandler, labels::Vector{String})
+    config(handler::AbstractHandler, prefix::String)
     config(labels::Vector{String}, args...; kwargs...)
     config(prefix::String, args...; kwargs...)
 
-Configures the specified checkpoints with a `Handler`.
-If the first argument is not a `Handler` then all `args` and `kwargs` are passed to a
-`Handler` constructor for you.
+Configures the specified checkpoints with a `AbstractHandler`.
+If the first argument is not an `AbstractHandler` then all `args` and `kwargs` are
+passed to a `JLSOHandler` constructor for you.
 """
-function config(handler::Handler, names::Vector{String})
+function config(handler::AbstractHandler, names::Vector{String})
     for n in names
         _config(handler, n)
     end
 end
 
-function config(handler::Handler, prefix::Union{Module, String})
+function config(handler::AbstractHandler, prefix::Union{Module, String})
     config(handler, filter(l -> startswith(l, prefix), available()))
 end
 
 function config(names::Vector{String}, args...; kwargs...)
-    config(Handler(args...; kwargs...), names)
+    config(JLSOHandler(args...; kwargs...), names)
 end
 
 function config(prefix::Union{Module, String}, args...; kwargs...)
-    config(Handler(args...; kwargs...), prefix)
+    config(JLSOHandler(args...; kwargs...), prefix)
 end
 
 # To avoid collisions with `prefix` method above, which should probably use

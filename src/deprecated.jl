@@ -11,3 +11,5 @@ function checkpoint_deprecation(tags...)
         :checkpoint
     )
 end
+
+Base.@deprecate_binding Handler JLSOHandler
