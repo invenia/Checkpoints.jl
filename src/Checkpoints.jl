@@ -9,7 +9,7 @@ module Checkpoints
 
 using AWSS3
 using Compat # for contains (julia v1.5)
-using ContextVariablesX
+using ScopedValues
 using DataStructures: DefaultDict
 using FilePathsBase
 using FilePathsBase: /, join
@@ -30,7 +30,7 @@ __init__() = Memento.register(LOGGER)
 include("handler.jl")
 
 const CHECKPOINTS = Dict{String, Union{Nothing, String, AbstractHandler}}()
-@contextvar CONTEXT_TAGS::Tuple{Vararg{Pair{Symbol, Any}}} = Tuple{}()
+const CONTEXT_TAGS = ScopedValue{Tuple{Vararg{Pair{Symbol, Any}}}}(Tuple{}())
 
 include("session.jl")
 include("indexing.jl")
@@ -58,7 +58,7 @@ allowed, including the tags provided directly in the [`checkpoint`](@ref) call.
 Duplicate tags are repeated, not overwritten.
 """
 function with_checkpoint_tags(f::Function, context_tags::Pair...)
-    with_context(f, CONTEXT_TAGS => (CONTEXT_TAGS[]..., context_tags...))
+    scoped(f, CONTEXT_TAGS => (CONTEXT_TAGS[]..., context_tags...))
 end
 with_checkpoint_tags(f::Function, context_tags::NamedTuple) = with_checkpoint_tags(f, pairs(context_tags)...)
 
